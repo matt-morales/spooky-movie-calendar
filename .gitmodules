@@ -1,0 +1,3 @@
+[submodule "spooky-movie-calendar"]
+    path = spooky-movie-calendar
+    url = https://github.com/matt-morales/spooky-movie-calendar.git
