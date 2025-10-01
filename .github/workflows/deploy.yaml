@@ -1,8 +1,8 @@
-name: Deploy CRA to GitHub Pages
+name: Build and Deploy (CRA → GitHub Pages)
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -24,19 +24,27 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 20
+          cache: npm
+          # 👇 point cache at the lockfile in the subfolder
+          cache-dependency-path: spooky-movie-calendar/package-lock.json
 
       - name: Install
         run: npm ci
+        working-directory: spooky-movie-calendar
 
       - name: Build (CRA)
         run: npm run build
+        working-directory: spooky-movie-calendar
+        env:
+          # CRA picks PUBLIC_URL from "homepage" in package.json,
+          # but this line is harmless and can help if homepage is missing.
+          PUBLIC_URL: /spooky-movie-calendar
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build
+          path: spooky-movie-calendar/build
 
   deploy:
     needs: build
@@ -45,7 +53,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
 
