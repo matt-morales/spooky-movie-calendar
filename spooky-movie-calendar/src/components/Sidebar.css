@@ -1,0 +1,150 @@
+:root {
+  --sb-min: 340px; /* ensures the title + lines never feel cramped   */
+  --sb-pref: 28vw; /* grows with viewport                            */
+  --sb-max: 560px; /* hard cap                                       */
+
+  /* Typography tokens (use your global ones if you already set them) */
+  --font-title: "Bebas Neue", system-ui, sans-serif;
+  --font-body:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  /* Colors */
+  --sb-bg: #0d0d0d;
+  --sb-ink: #f6f6f6;
+  --sb-ink-muted: #cfcfcf;
+  --sb-rule: rgba(255, 255, 255, 0.14);
+  --sb-link: #f6f6f6;
+  --sb-link-dim: rgba(246, 246, 246, 0.8);
+  --sb-link-hover: #ffffff;
+
+  /* Rhythm */
+  --sb-pad-x: 24px;
+  --sb-pad-y: 32px;
+  --sb-gap: 20px;
+}
+
+/* clamp + 30vw ceiling */
+.sidebar {
+  --sbw: clamp(var(--sb-min), var(--sb-pref), min(var(--sb-max), 30vw));
+
+  flex: 0 0 var(--sbw);
+  min-width: var(--sbw);
+  max-width: var(--sbw);
+
+  background: var(--sb-bg);
+  color: var(--sb-ink);
+  padding: var(--sb-pad-y) var(--sb-pad-x);
+  min-height: 100vh;
+
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--sb-gap);
+}
+
+/* Content block under the title */
+.sb-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Figma: Bebas Neue, 20px, line-height ~24.6px, letter-spacing 2.4px */
+.sb-kicker {
+  margin: 6px 0 0 0;
+  font-family: var(--font-title);
+  font-size: 20px;
+  line-height: 24.6px;
+  letter-spacing: 2.4px;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--sb-ink);
+}
+
+/* Body copy (Inter) */
+.sb-body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--sb-ink-muted);
+}
+
+/* Thin rule to separate links */
+.sb-rule {
+  border: 0;
+  height: 1px;
+  background: var(--sb-rule);
+  margin: 8px 0 6px 0;
+}
+
+/* Links list */
+.sb-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sb-links li {
+  margin-bottom: 12px;
+}
+
+/* Link container */
+.sb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  font: 400 16px/1.4 var(--font-body);
+  color: #f6f6f6;
+  text-decoration: none;
+  position: relative;
+  padding-bottom: 4px;
+}
+
+/* Icon sizing */
+.sb-link-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Underline effect */
+.sb-link-text {
+  position: relative;
+}
+
+.sb-link-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+
+.sb-link:hover .sb-link-text::after {
+  transform: scaleX(1);
+}
+
+/* Small screens: keep it readable but a bit tighter */
+@media (max-width: 900px) {
+  :root {
+    --sb-min: 300px;
+  }
+  .sb-kicker {
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+  .sb-body {
+    font-size: 14.5px;
+  }
+}

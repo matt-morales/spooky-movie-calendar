@@ -1,0 +1,97 @@
+figure {
+  margin: 0;
+}
+img {
+  display: block;
+}
+
+:root {
+  --content-max: clamp(960px, 78vw, 1400px);
+
+  --card-red-1: #e8463c;
+  --card-red-2: #822722;
+
+  --plate-red-1: #e8463c;
+  --plate-red-2: #822722;
+
+  --ink: #fef5e4;
+  --ink-strong: #fef5e6;
+
+  --font-title: "Bebas Neue", sans-serif;
+  --font-body:
+    "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+
+  --gap-plate-to-copy: 37px; /* gap from bottom of poster plate to copy */
+  --card-bottom-pad: 40px; /* bottom padding for the whole card */
+  --plate-max: clamp(420px, 48vw, 680px);
+  --badge-pad-y: 8px;
+  --badge-pad-x: 14px;
+  --badge-radius: 4px;
+  --badge-bg: #3b3b3b;
+  --badge-border: #2b2b2b;
+  --plate-aspect: 16 / 9;
+  --plate-bg: #000000;
+
+  --desc-size: clamp(14px, 1.4vw, 15px);
+  --desc-line: 1.55;
+  --desc-color: rgba(254, 245, 228, 0.92);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 400;
+} /* remove default browser margins */
+* {
+  box-sizing: border-box;
+}
+h1,
+h2,
+h3 {
+  font-family: var(--font-title);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--ink-strong);
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.app {
+  display: flex; /* left sidebar + right content */
+  min-height: 100vh;
+  width: 100%;
+}
+
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+  /*background: linear-gradient(180deg, var(--card-red-1), var(--card-red-2));*/
+  background: #262424;
+  padding: 0 24px 64px; /* 0 top so the calendar is flush */
+}
+
+/* center the movies under the calendar */
+.content-inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+/* make the sticky calendar span full width of the red column */
+.sticky-cal {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin-left: -24px; /* pull over side padding for full-bleed */
+  margin-right: -24px;
+}
+
+/* nice to have */
+.movie-section {
+  margin: 0;
+}
