@@ -30,6 +30,7 @@
   flex: 0 0 var(--sbw);
   min-width: var(--sbw);
   max-width: var(--sbw);
+  container-type: inline-size;
 
   background: var(--sb-bg);
   color: var(--sb-ink);

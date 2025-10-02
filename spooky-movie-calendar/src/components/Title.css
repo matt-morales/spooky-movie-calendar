@@ -1,10 +1,21 @@
+/* Title.css */
 .title {
-  font-family: "Bebas Neue";
-  font-size: 120px;
+  font-family: "Bebas Neue", sans-serif;
+  /* scales with the sidebar’s width */
+  font-size: clamp(56px, 12cqw, 180px);
+  line-height: 0.85;
   font-weight: 400;
-  line-height: 100px;
   color: #e4453c;
   margin: 0;
   text-transform: uppercase;
-  overflow-wrap: break-word;
+  white-space: normal;
+  word-break: keep-all;
+  overflow: clip;
+}
+
+/* Fallback for browsers without container units */
+@supports not (font-size: 1cqw) {
+  .title {
+    font-size: clamp(56px, 9vw, 180px);
+  }
 }
