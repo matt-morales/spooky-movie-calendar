@@ -129,15 +129,16 @@ img {
 /* ---------- responsive: stack on narrow screens ---------- */
 @media (max-width: 900px) {
   .movie-body {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr !important;
     grid-template-areas:
-      "poster poster"
-      "badge  badge"
-      "desc   desc";
-    row-gap: 18px;
+      "poster"
+      "badge"
+      "desc";
+    column-gap: 0;
+    row-gap: 16px;
   }
   .movie-copy {
-    max-width: 72ch;
+    max-width: none;
   }
   .date-badge {
     justify-self: start;

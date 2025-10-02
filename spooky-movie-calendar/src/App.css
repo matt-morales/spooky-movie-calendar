@@ -95,3 +95,51 @@ h3 {
 .movie-section {
   margin: 0;
 }
+
+/* ===== Mobile layout + hygiene (append to the end of App.css) ===== */
+
+/* prevent the right-side white stripe caused by overflow */
+html,
+body {
+  overflow-x: hidden;
+}
+
+/* a single variable to control horizontal padding on small screens */
+:root {
+  --page-pad: clamp(12px, 4vw, 20px);
+}
+
+@media (max-width: 900px) {
+  /* stack sidebar above content */
+  .app {
+    flex-direction: column;
+  }
+
+  /* sidebar becomes a normal block; no sticky on mobile */
+  .sidebar {
+    position: static;
+    min-height: 0;
+    flex: 0 0 auto;
+    width: auto;
+    max-width: none;
+    padding: 24px var(--page-pad);
+  }
+
+  /* symmetric padding for the right column (no white gutter) */
+  .content {
+    padding: 0 var(--page-pad) 56px;
+  }
+
+  /* make the sticky calendar full-bleed relative to .content padding */
+  .sticky-cal {
+    top: 0;
+    margin-left: calc(-1 * var(--page-pad));
+    margin-right: calc(-1 * var(--page-pad));
+  }
+
+  /* constrain readable width but allow the grid to breathe */
+  .content-inner {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+}
