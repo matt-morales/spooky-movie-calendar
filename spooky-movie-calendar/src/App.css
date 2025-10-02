@@ -93,7 +93,7 @@ h3 {
 
 /* nice to have */
 .movie-section {
-  margin: 0;
+  scroll-margin-top: calc(var(--cal-height, 0px) + 8px);
 }
 
 /* ===== Mobile layout + hygiene (append to the end of App.css) ===== */

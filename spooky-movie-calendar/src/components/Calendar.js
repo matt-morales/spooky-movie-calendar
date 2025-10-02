@@ -1,12 +1,10 @@
-// Calendar.js
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./Calendar.css";
 
 export default function Calendar() {
   const daysInMonth = 31;
   const monthLabel = "October 2025";
 
-  // Start from URL hash (e.g. #movie-7) but do NOT auto-scroll.
   const initialFromHash = useMemo(() => {
     const m = window.location.hash.match(/#movie-(\d{1,2})/);
     const d = m ? parseInt(m[1], 10) : 1;
@@ -15,27 +13,46 @@ export default function Calendar() {
 
   const [selectedDay, setSelectedDay] = useState(initialFromHash);
 
+  // Keep a CSS var with the sticky calendar's height up to date.
+  useEffect(() => {
+    const root = document.documentElement;
+    const cal = document.querySelector(".cal");
+    if (!cal) return;
+
+    const setHeightVar = () => {
+      root.style.setProperty("--cal-height", `${cal.offsetHeight}px`);
+    };
+
+    setHeightVar();
+
+    const ro = new ResizeObserver(setHeightVar);
+    ro.observe(cal);
+
+    // fonts can change height a bit on load
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(setHeightVar);
+    }
+
+    window.addEventListener("orientationchange", setHeightVar);
+    window.addEventListener("resize", setHeightVar);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("orientationchange", setHeightVar);
+      window.removeEventListener("resize", setHeightVar);
+    };
+  }, []);
+
   const handleClick = (day) => {
     setSelectedDay(day);
 
-    const target = document.getElementById(`movie-${day}`);
-    const cal = document.querySelector(".cal");
-    if (!target || !cal) return;
-
-    // Use a stable offset: the sticky calendar's height
-    const calHeight = cal.offsetHeight;
-
-    // Absolute position of the movie card's top
-    const targetTop = target.getBoundingClientRect().top + window.scrollY;
-
-    // Update the hash without triggering the browser's native jump
-    window.history.replaceState(null, "", `#movie-${day}`);
-
-    // Scroll so that the movie card's top sits immediately under the calendar
-    window.scrollTo({
-      top: targetTop - calHeight,
-      behavior: "smooth",
-    });
+    const el = document.getElementById(`movie-${day}`);
+    if (el) {
+      // Native scroll + scroll-margin-top does the perfect alignment,
+      // even on mobile with a sticky element.
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.replaceState(null, "", `#movie-${day}`);
+    }
   };
 
   return (
