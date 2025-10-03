@@ -1,6 +1,6 @@
 {
   "name": "spooky-movie-calendar",
-  "homepage": "https://matt-morales.github.io/spooky-movie-calendar",
+  "homepage": "https://31nightsofhorror.com",
   "private": false,
   "dependencies": {
     "react": "^18.2.0",
