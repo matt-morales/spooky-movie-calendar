@@ -1,6 +1,5 @@
 // components/Sidebar.js
 import Title from "./Title";
-import letterboxd from "../assets/icons/letterboxd.png";
 import "./Sidebar.css";
 
 export default function Sidebar() {
@@ -30,7 +29,7 @@ export default function Sidebar() {
               rel="noopener noreferrer"
             >
               <img
-                src={letterboxd}
+                src={process.env.PUBLIC_URL + "/icons/letterboxd.png"}
                 alt=""
                 className="sb-link-icon"
                 aria-hidden="true"
