@@ -9,7 +9,7 @@
     "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 
   /* Colors */
-  --sb-bg: #0d0d0d;
+  --sb-bg: #000;
   --sb-ink: #f6f6f6;
   --sb-ink-muted: #cfcfcf;
   --sb-rule: rgba(255, 255, 255, 0.14);

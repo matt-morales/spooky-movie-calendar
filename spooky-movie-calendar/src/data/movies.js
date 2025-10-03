@@ -27,6 +27,9 @@ import {
   hillshaveeyes,
   others,
   mama,
+  hopw,
+  gonjiam,
+  afflicted,
 } from "../assets/posters";
 
 const movies = [
@@ -335,6 +338,39 @@ const movies = [
     description:
       "Two young girls are found in a forest after being missing for five years, and are taken in by their uncle and his girlfriend. However, they soon discover that the girls are being haunted by a malevolent spirit that has followed them home.",
     directors: "Andrés Muschietti",
+    rating: 7,
+    comments: [],
+  },
+  {
+    id: 29,
+    title: "House of Psychotic Women",
+    date: "October 29th",
+    poster: hopw,
+    description:
+      "A documentary exploring the life and work of filmmaker and actress Mary Harron, known for her portrayal of complex and troubled women in cult horror films. The film delves into Harron's personal struggles and the themes of mental illness and identity in her work.",
+    directors: "Jackie Strano",
+    rating: 6,
+    comments: [],
+  },
+  {
+    id: 30,
+    title: "Gonjiam: Haunted Asylum",
+    date: "October 30th",
+    poster: gonjiam,
+    description:
+      "A group of people exploring an abandoned asylum for a horror web series encounter terrifying supernatural phenomena. As they delve deeper into the asylum's dark history, they must confront their own fears and the malevolent forces that haunt the building.",
+    directors: "Hwang Dong-hyuk",
+    rating: 7,
+    comments: [],
+  },
+  {
+    id: 31,
+    title: "Afflicted",
+    date: "October 31st",
+    poster: afflicted,
+    description:
+      "Two friends set out on a year-long trip around the world, documenting their experiences. However, one of them becomes infected with a mysterious illness that gives him supernatural abilities, leading to a terrifying transformation and a struggle for survival.",
+    directors: "Derek Lee, Clif Prowse",
     rating: 7,
     comments: [],
   },

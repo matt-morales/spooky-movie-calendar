@@ -26,6 +26,9 @@ import village from "./thevillage.jpg";
 import hillshaveeyes from "./thehillshaveeyes.jpg";
 import others from "./theothers.jpg";
 import mama from "./mama.jpg";
+import afflicted from "./afflicted.jpg";
+import gonjiam from "./gonjiam.jpg";
+import hopw from "./hopw.jpg";
 
 export {
   christine,
@@ -56,4 +59,7 @@ export {
   hillshaveeyes,
   others,
   mama,
+  afflicted,
+  gonjiam,
+  hopw,
 };

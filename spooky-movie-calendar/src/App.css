@@ -71,7 +71,6 @@ h3 {
 .content {
   flex: 1 1 auto;
   min-width: 0;
-  /*background: linear-gradient(180deg, var(--card-red-1), var(--card-red-2));*/
   background: #262424;
   padding: 0 24px 64px; /* 0 top so the calendar is flush */
 }

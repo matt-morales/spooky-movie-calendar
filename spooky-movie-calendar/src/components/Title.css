@@ -1,19 +1,60 @@
-/* Title.css */
 .title {
   font-family: "Bebas Neue", sans-serif;
-  /* scales with the sidebar’s width */
   font-size: clamp(56px, 12cqw, 180px);
-  line-height: 0.85;
   font-weight: 400;
+  line-height: 0.95; /* a touch more breathing room */
   color: #e4453c;
   margin: 0;
   text-transform: uppercase;
+  letter-spacing: 2.5px; /* slightly tighter tracking */
   white-space: normal;
   word-break: keep-all;
   overflow: clip;
 }
 
-/* Fallback for browsers without container units */
+/* Tilted characters (like the "1") */
+.title-tilt {
+  display: inline-block;
+  transform: rotate(10deg);
+}
+
+/* Falling S */
+.title-fall {
+  display: inline-block;
+  transform: rotate(12deg) translateY(15%);
+  transform-origin: center;
+}
+
+/* Replacement O */
+.title-o {
+  position: relative;
+  display: inline-block;
+  width: 0.78em; /* slightly wider for breathing room */
+  aspect-ratio: 1 / 1;
+  transform-origin: center;
+  vertical-align: -0.05em; /* nudge baseline so it aligns with letters */
+  overflow: visible; /* ensure the ring stroke isn’t clipped */
+}
+
+.title-o-ring {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible; /* extra safety */
+}
+
+.o-core {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.o-core svg {
+  width: 60%; /* tweak down slightly so it doesn’t crowd edges */
+  height: auto;
+}
+
 @supports not (font-size: 1cqw) {
   .title {
     font-size: clamp(56px, 9vw, 180px);
