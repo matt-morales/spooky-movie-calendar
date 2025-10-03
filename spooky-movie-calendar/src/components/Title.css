@@ -1,3 +1,7 @@
+:root {
+  --sb-accent: #e8473d; /* squiggle + title red */
+}
+
 .title {
   font-family: "Bebas Neue", sans-serif;
   font-size: clamp(56px, 12cqw, 180px);
