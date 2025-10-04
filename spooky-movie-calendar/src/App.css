@@ -25,11 +25,11 @@ img {
   --gap-plate-to-copy: 37px; /* gap from bottom of poster plate to copy */
   --card-bottom-pad: 40px; /* bottom padding for the whole card */
   --plate-max: clamp(420px, 48vw, 680px);
-  --badge-pad-y: 8px;
+  --badge-pad-y: 14px;
   --badge-pad-x: 14px;
   --badge-radius: 4px;
-  --badge-bg: #3b3b3b;
-  --badge-border: #2b2b2b;
+  --badge-bg: #424242;
+  --badge-border: rgba(0, 0, 0, 0.54);
   --plate-aspect: 16 / 9;
   --plate-bg: #000000;
 
@@ -72,7 +72,7 @@ h3 {
   flex: 1 1 auto;
   min-width: 0;
   background: #262424;
-  padding: 0 24px 64px; /* 0 top so the calendar is flush */
+  padding: 0 (--page-pad) 64px; /* 0 top so the calendar is flush */
 }
 
 /* center the movies under the calendar */
@@ -86,8 +86,7 @@ h3 {
   position: sticky;
   top: 0;
   z-index: 10;
-  margin-left: -24px; /* pull over side padding for full-bleed */
-  margin-right: -24px;
+  margin: 0;
 }
 
 /* nice to have */

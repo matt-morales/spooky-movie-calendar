@@ -81,7 +81,7 @@ function EyeO() {
   ];
 
   // Per-state durations (ms)
-  const durations = [2000, 1000, 1000, 500];
+  const durations = [2000, 500, 700, 200];
 
   const [index, setIndex] = useState(0);
 

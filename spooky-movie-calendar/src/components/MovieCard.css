@@ -43,16 +43,16 @@ img {
 
 /* =========================================================
    GRID LAYOUT
-   poster | desc
+   poster poster
    badge  | desc
    ========================================================= */
 .movie-body {
   display: grid;
-  grid-template-columns: minmax(20px, 0.9fr) minmax(540px, 1.1fr);
+  grid-template-columns: max-content minmax(420px, 1fr);
   grid-template-areas:
     "poster poster"
     "badge  desc";
-  column-gap: clamp(32px, 4vw, 64px);
+  column-gap: clamp(16px, 2vw, 40px);
   row-gap: 16px;
 }
 
@@ -79,8 +79,8 @@ img {
 
 /* date badge (under poster, same left edge) */
 .date-badge {
-  min-width: max-content;
-  padding: var(--badge-pad-y, 8px) clamp(14px, 2vw, 22px);
+  width: max-content;
+  padding: var(--badge-pad-y, 14px) clamp(14px, 2vw, 22px);
   font-size: clamp(0.9rem, 1vw, 1rem);
   white-space: nowrap;
 
@@ -88,11 +88,10 @@ img {
   justify-self: start;
   align-self: start;
   background: var(--badge-bg, #3b3b3b);
-  color: #f3f3f3;
-  border: 1px solid var(--badge-border, #2b2b2b);
+  border: 0.41px solid var(--badge-border, #2b2b2b);
   border-radius: var(--badge-radius, 4px);
   font: 500 0.9rem/1 var(--font-body);
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: 2px 5px 10.6px 0 rgba(0, 0, 0, 0.13);
 }
 
 /* description column (wrapped to ~measure width) */
