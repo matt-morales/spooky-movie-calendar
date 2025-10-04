@@ -1,12 +1,11 @@
+/* ===========================
+   Sidebar.css
+   =========================== */
+
 :root {
   --sb-min: 340px; /* ensures the title + lines never feel cramped   */
   --sb-pref: 28vw; /* grows with viewport                            */
   --sb-max: 560px; /* hard cap                                       */
-
-  /* Typography tokens (use your global ones if you already set them) */
-  --font-title: "Bebas Neue", system-ui, sans-serif;
-  --font-body:
-    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 
   /* Colors */
   --sb-bg: #000;
@@ -56,11 +55,6 @@
 /* Figma: Bebas Neue, 20px, line-height ~24.6px, letter-spacing 2.4px */
 .sb-kicker {
   margin: 6px 0 0 0;
-  font-family: var(--font-title);
-  font-size: 20px;
-  line-height: 24.6px;
-  letter-spacing: 2.4px;
-  font-weight: 400;
   text-transform: uppercase;
   color: var(--sb-ink);
 }
@@ -82,9 +76,6 @@
 /* Body copy (Inter) */
 .sb-body {
   margin: 0;
-  font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.55;
   color: var(--sb-ink-muted);
 }
 
@@ -113,7 +104,6 @@
   align-items: center;
   gap: 10px;
 
-  font: 400 16px/1.4 var(--font-body);
   color: #f6f6f6;
   text-decoration: none;
   position: relative;
@@ -155,12 +145,9 @@
   :root {
     --sb-min: 300px;
   }
+
   .sb-kicker {
-    font-size: 18px;
     letter-spacing: 2px;
-  }
-  .sb-body {
-    font-size: 14.5px;
   }
   .sb-squiggle-wrap {
     margin-top: 4px;

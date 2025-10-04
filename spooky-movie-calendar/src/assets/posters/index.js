@@ -8,9 +8,7 @@ import practicalmagic from "./practicalmagic.jpg";
 import thething from "./thething.jpg";
 import asabovesobelow from "./asabovesobelow.jpg";
 import mirrors from "./mirrors.jpg";
-import girlinterrupted from "./girlinterrupted.jpg";
 import weapons from "./weapons.jpg";
-import fourteenzeroeight from "./1408.jpg";
 import incantation from "./incantation.jpg";
 import theomen from "./theomen.jpg";
 import thirtydaysofnight from "./30daysofnight.jpg";
@@ -25,10 +23,12 @@ import thanksgiving from "./thanksgiving.jpg";
 import village from "./thevillage.jpg";
 import hillshaveeyes from "./thehillshaveeyes.jpg";
 import others from "./theothers.jpg";
-import mama from "./mama.jpg";
 import afflicted from "./afflicted.jpg";
 import gonjiam from "./gonjiam.jpg";
 import hopw from "./hopw.jpg";
+import nightofthelivingdead from "./nightofthelivingdead.jpg";
+import anightmareonelmstreet from "./anightmareonelmstreet.jpg";
+import fridaythe13th4 from "./fridaythe13th4.jpg";
 
 export {
   christine,
@@ -41,9 +41,7 @@ export {
   thething,
   asabovesobelow,
   mirrors,
-  girlinterrupted,
   weapons,
-  fourteenzeroeight,
   incantation,
   theomen,
   thirtydaysofnight,
@@ -58,8 +56,10 @@ export {
   village,
   hillshaveeyes,
   others,
-  mama,
   afflicted,
   gonjiam,
   hopw,
+  nightofthelivingdead,
+  anightmareonelmstreet,
+  fridaythe13th4,
 };

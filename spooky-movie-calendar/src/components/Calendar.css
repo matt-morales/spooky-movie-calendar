@@ -1,5 +1,4 @@
 :root {
-  --accent: #e61a2c;
   --accent-cal-left: #6e1a2c;
   --cal-bg: #000;
   --cal-txt: #ededed;
@@ -13,7 +12,6 @@
 /* Calendar block */
 .cal {
   background: var(--cal-bg);
-  color: var(--cal-txt);
   padding: 16px 18px;
   border-left: 0.8px solid var(--accent-cal-left);
   box-shadow: none;
@@ -23,11 +21,7 @@
 .cal-header {
   margin: 0 0 12px;
   text-align: center;
-  font-family: var(--font-title, "Bebas Neue", system-ui, sans-serif);
-  font-weight: 400;
-  font-size: clamp(14px, 2.2vw, 22px);
   letter-spacing: 1.4px;
-  color: var(--cal-txt);
 }
 
 /* Evenly distributed 7 columns */
@@ -49,11 +43,8 @@
 
   border: 1px solid var(--day-border);
   background: transparent;
-  color: #fff;
+  color: var(--cal-txt);
 
-  font-family: "Public Sans", var(--font-body, Inter, sans-serif);
-  font-size: var(--day-font);
-  font-weight: 600;
   line-height: 1;
 
   cursor: pointer;
@@ -98,6 +89,5 @@
 @media (max-width: 640px) {
   :root {
     --day-gap: 6px;
-    --day-font: 12px;
   }
 }

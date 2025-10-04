@@ -7,13 +7,13 @@ import {
   silenthill,
   practicalmagic,
   thething,
-  asabovesobelow,
-  mirrors,
-  girlinterrupted,
-  weapons,
-  fourteenzeroeight,
-  incantation,
   theomen,
+  mirrors,
+  weapons,
+  anightmareonelmstreet,
+  fridaythe13th4,
+  incantation,
+  asabovesobelow,
   thirtydaysofnight,
   lightsout,
   terrifier3,
@@ -26,10 +26,10 @@ import {
   village,
   hillshaveeyes,
   others,
-  mama,
   hopw,
   gonjiam,
   afflicted,
+  nightofthelivingdead,
 } from "../assets/posters";
 
 const movies = [
@@ -123,13 +123,13 @@ const movies = [
   },
   {
     id: 9,
-    title: "As Above, So Below",
-    date: "October 9th",
-    poster: asabovesobelow,
+    title: "The Omen",
+    date: "October 9thth",
+    poster: theomen,
     description:
-      "A team of explorers ventures into the catacombs beneath Paris in search of a lost treasure, only to discover that the underground labyrinth holds dark secrets and terrifying dangers that threaten their sanity and survival.",
-    directors: "John Erick Dowdle",
-    rating: 6,
+      "A diplomat and his wife adopt a child, only to discover that he is the Antichrist. As strange and deadly events begin to occur around them, they must find a way to stop them before it's too late.",
+    directors: "Richard Donner",
+    rating: 8,
     comments: [],
   },
   {
@@ -145,19 +145,8 @@ const movies = [
   },
   {
     id: 11,
-    title: "Girl, Interrupted",
-    date: "October 11th",
-    poster: girlinterrupted,
-    description:
-      "Based on the memoir by Susanna Kaysen, the film follows a young woman's 18-month stay at a mental institution in the 1960s, where she forms relationships with other patients and struggles to find her own identity amidst the chaos.",
-    directors: "James Mangold",
-    rating: 7,
-    comments: [],
-  },
-  {
-    id: 12,
     title: "Weapons",
-    date: "October 12th",
+    date: "October 11th",
     poster: weapons,
     description:
       "A dark and gritty exploration of the lives of several teenagers in a rough urban neighborhood, whose paths intersect in a violent and tragic way. The film delves into themes of anger, revenge, and the consequences of one's actions.",
@@ -166,14 +155,25 @@ const movies = [
     comments: [],
   },
   {
-    id: 13,
-    title: "1408",
-    date: "October 13th",
-    poster: fourteenzeroeight,
+    id: 12,
+    title: "A Nightmare on Elm Street",
+    date: "October 12th",
+    poster: anightmareonelmstreet,
     description:
-      "A skeptical author who specializes in debunking supernatural phenomena checks into the infamous room 1408 at the Dolphin Hotel. Despite warnings from the hotel manager, he soon finds himself trapped in a nightmarish reality where his worst fears come to life.",
-    directors: "Mikael Håfström",
+      "A group of teenagers in a small town are terrorized in their dreams by the vengeful spirit of a disfigured serial killer, Freddy Krueger. As the line between dreams and reality blurs, they must find a way to confront their fears and stop Freddy before he claims more victims.",
+    directors: "Wes Craven",
     rating: 8,
+    comments: [],
+  },
+  {
+    id: 13,
+    title: "Friday the 13th: The Final Chapter",
+    date: "October 13th",
+    poster: fridaythe13th4,
+    description:
+      "After a series of brutal murders at Camp Crystal Lake, a group of teenagers must band together to survive the night and confront the relentless killer, Jason Voorhees. As they fight for their lives, they uncover dark secrets about the camp's past that may hold the key to stopping the madness.",
+    directors: "Joseph Zito",
+    rating: 7,
     comments: [],
   },
   {
@@ -189,13 +189,13 @@ const movies = [
   },
   {
     id: 15,
-    title: "The Omen",
+    title: "As Above, So Below",
     date: "October 15th",
-    poster: theomen,
+    poster: asabovesobelow,
     description:
-      "A diplomat and his wife adopt a child, only to discover that he is the Antichrist. As strange and deadly events begin to occur around them, they must find a way to stop them before it's too late.",
-    directors: "Richard Donner",
-    rating: 8,
+      "A team of explorers ventures into the catacombs beneath Paris in search of a lost treasure, only to discover that the underground labyrinth holds dark secrets and terrifying dangers that threaten their sanity and survival.",
+    directors: "John Erick Dowdle",
+    rating: 6,
     comments: [],
   },
   {
@@ -266,12 +266,12 @@ const movies = [
   },
   {
     id: 22,
-    title: "The Conjuring: The Movie",
+    title: "Texas Chainsaw Massacre",
     date: "October 22nd",
     poster: tcm,
     description:
-      "Based on the true story of paranormal investigators Ed and Lorraine Warren, the film follows their efforts to help a family terrorized by a dark presence in their farmhouse. As they confront the malevolent entity, they must also face their own fears and doubts.",
-    directors: "James Wan",
+      "A group of friends on a road trip in rural Texas encounter a family of cannibals, including the infamous Leatherface, who wields a chainsaw. As they fight for their lives, they must confront the horrors of the isolated and twisted world they have stumbled into.",
+    directors: "Tobe Hooper",
     rating: 9,
     comments: [],
   },
@@ -332,19 +332,8 @@ const movies = [
   },
   {
     id: 28,
-    title: "Mama",
-    date: "October 28th",
-    poster: mama,
-    description:
-      "Two young girls are found in a forest after being missing for five years, and are taken in by their uncle and his girlfriend. However, they soon discover that the girls are being haunted by a malevolent spirit that has followed them home.",
-    directors: "Andrés Muschietti",
-    rating: 7,
-    comments: [],
-  },
-  {
-    id: 29,
     title: "House of Psychotic Women",
-    date: "October 29th",
+    date: "October 28th",
     poster: hopw,
     description:
       "A documentary exploring the life and work of filmmaker and actress Mary Harron, known for her portrayal of complex and troubled women in cult horror films. The film delves into Harron's personal struggles and the themes of mental illness and identity in her work.",
@@ -353,9 +342,9 @@ const movies = [
     comments: [],
   },
   {
-    id: 30,
+    id: 29,
     title: "Gonjiam: Haunted Asylum",
-    date: "October 30th",
+    date: "October 29th",
     poster: gonjiam,
     description:
       "A group of people exploring an abandoned asylum for a horror web series encounter terrifying supernatural phenomena. As they delve deeper into the asylum's dark history, they must confront their own fears and the malevolent forces that haunt the building.",
@@ -364,13 +353,24 @@ const movies = [
     comments: [],
   },
   {
-    id: 31,
+    id: 30,
     title: "Afflicted",
-    date: "October 31st",
+    date: "October 30th",
     poster: afflicted,
     description:
       "Two friends set out on a year-long trip around the world, documenting their experiences. However, one of them becomes infected with a mysterious illness that gives him supernatural abilities, leading to a terrifying transformation and a struggle for survival.",
     directors: "Derek Lee, Clif Prowse",
+    rating: 7,
+    comments: [],
+  },
+  {
+    id: 31,
+    title: "Night of the Living Dead",
+    date: "October 31st",
+    poster: nightofthelivingdead,
+    description:
+      "A group of people trapped in a farmhouse must defend themselves against a horde of flesh-eating zombies. As they struggle to survive, they must also confront their own fears and the breakdown of society in the face of the undead apocalypse.",
+    directors: "George A. Romero",
     rating: 7,
     comments: [],
   },

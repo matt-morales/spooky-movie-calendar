@@ -1,56 +1,80 @@
+/* ===========================
+   App.css
+   =========================== */
+/* --------- Base resets --------- */
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
 figure {
   margin: 0;
 }
 img {
   display: block;
 }
+html,
+body {
+  overflow-x: hidden;
+}
 
+/* --------- Design tokens --------- */
 :root {
-  --content-max: clamp(960px, 78vw, 1400px);
+  /* layout */
+  --content-max: clamp(1100px, 86vw, 1680px);
+  --page-pad: clamp(12px, 4vw, 20px); /* page gutters on small screens */
 
-  --card-red-1: #e8463c;
-  --card-red-2: #822722;
-
-  --plate-red-1: #e8463c;
-  --plate-red-2: #822722;
-
+  /* colors */
   --ink: #fef5e4;
   --ink-strong: #fef5e6;
+  --accent: #e8473d; /* title red */
+  --card-red-1: #e8463c;
+  --card-red-2: #822722;
+  --plate-bg: #000;
 
+  /* typography */
   --font-title: "Bebas Neue", sans-serif;
   --font-body:
-    "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
 
-  --gap-plate-to-copy: 37px; /* gap from bottom of poster plate to copy */
-  --card-bottom-pad: 40px; /* bottom padding for the whole card */
+  /* Responsive type tokens (easy knobs) */
+  --ft-min: 20px; /* font title minimum */
+  --ft-max: 32px; /* font title cap */
+  --ft-fluid-vw: 2.2vw; /* title growth vs viewport */
+  --ft-fluid-cq: 2cqi; /* title growth vs container (if supported) */
+
+  --fb-min: 14px; /* body minimum */
+  --fb-max: 18px; /* body cap */
+  --fb-fluid-vw: 1.1vw; /* body growth vs viewport */
+  --fb-fluid-cq: 0.95cqi; /* body growth vs container (if supported) */
+
+  /* Optional global multiplier if you ever want to bump everything quickly */
+  --type-scale: 1;
+
+  /* movie card metrics */
+  --gap-plate-to-copy: 37px;
+  --card-bottom-pad: 40px;
+  --plate-aspect: 16 / 9;
   --plate-max: clamp(420px, 48vw, 680px);
   --badge-pad-y: 14px;
   --badge-pad-x: 14px;
   --badge-radius: 4px;
   --badge-bg: #424242;
   --badge-border: rgba(0, 0, 0, 0.54);
-  --plate-aspect: 16 / 9;
-  --plate-bg: #000000;
-
-  --desc-size: clamp(14px, 1.4vw, 15px);
+  --desc-size: clamp(14px, 1.8vw, 18px);
   --desc-line: 1.55;
   --desc-color: rgba(254, 245, 228, 0.92);
+
+  --poster-col: clamp(540px, 48vw, 920px);
 }
 
-html,
-body,
-#root {
-  height: 100%;
-}
-body {
-  margin: 0;
-  font-family: var(--font-body);
-  font-weight: 400;
-} /* remove default browser margins */
-* {
-  box-sizing: border-box;
-}
+/* font titles */
+.movie-title,
+.cal-header,
 h1,
 h2,
 h3 {
@@ -58,12 +82,34 @@ h3 {
   font-weight: 400;
   letter-spacing: 0.02em;
   color: var(--ink-strong);
-  margin-top: 0;
-  margin-bottom: 8px;
+  margin: 0 0 8px 0;
+
+  font-size: clamp(
+    calc(var(--ft-min) * var(--type-scale)),
+    calc(var(--ft-fluid-vw) * var(--type-scale)),
+    calc(var(--ft-max) * var(--type-scale))
+  );
 }
 
+/* font body */
+body,
+.sidebar,
+.movie-copy .description {
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: var(--desc-line, 1.55);
+  color: var(--desc-color, rgba(254, 245, 228, 0.92));
+
+  font-size: clamp(
+    calc(var(--fb-min) * var(--type-scale)),
+    calc(var(--fb-fluid-vw) * var(--type-scale)),
+    calc(var(--fb-max) * var(--type-scale))
+  );
+}
+
+/* --------- App layout --------- */
 .app {
-  display: flex; /* left sidebar + right content */
+  display: flex;
   min-height: 100vh;
   width: 100%;
 }
@@ -72,72 +118,62 @@ h3 {
   flex: 1 1 auto;
   min-width: 0;
   background: #262424;
-  padding: 0 (--page-pad) 64px; /* 0 top so the calendar is flush */
+  /* 0 top so the calendar sits flush; symmetric horizontal gutters; 64px bottom */
+  padding: 0 var(--page-pad) 64px;
 }
 
-/* center the movies under the calendar */
 .content-inner {
   max-width: var(--content-max);
   margin: 0 auto;
 }
 
-/* make the sticky calendar span full width of the red column */
+/* Sticky calendar */
 .sticky-cal {
   position: sticky;
   top: 0;
   z-index: 10;
-  margin: 0;
+  margin-left: calc(-1 * var(--page-pad));
+  margin-right: calc(-1 * var(--page-pad));
 }
 
-/* nice to have */
+/* Improve anchor scroll target for movie sections */
 .movie-section {
   scroll-margin-top: calc(var(--cal-height, 0px) + 8px);
 }
 
-/* ===== Mobile layout + hygiene (append to the end of App.css) ===== */
-
-/* prevent the right-side white stripe caused by overflow */
+/* Guard against accidental overflow */
 html,
 body {
   overflow-x: hidden;
 }
 
-/* a single variable to control horizontal padding on small screens */
-:root {
-  --page-pad: clamp(12px, 4vw, 20px);
-}
-
+/* --------- Mobile tweaks --------- */
 @media (max-width: 900px) {
-  /* stack sidebar above content */
+  /* Easiest: stop using flex on the wrapper so children stack naturally */
   .app {
-    flex-direction: column;
+    display: block; /* instead of flex */
   }
 
-  /* sidebar becomes a normal block; no sticky on mobile */
-  .sidebar {
-    position: static;
-    min-height: 0;
-    flex: 0 0 auto;
-    width: auto;
-    max-width: none;
-    padding: 24px var(--page-pad);
+  /* Hard-override any left-rail sizing from Sidebar.css */
+  .app .sidebar {
+    position: static !important; /* no sticky on mobile */
+    flex: 0 1 auto !important; /* let it size like a normal block */
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    padding: 24px var(--page-pad, 20px) !important;
+    height: auto !important;
+    min-height: 0 !important;
   }
 
-  /* symmetric padding for the right column (no white gutter) */
+  /* Keep the right column padded and full width */
   .content {
-    padding: 0 var(--page-pad) 56px;
+    padding: 0 var(--page-pad, 20px) 56px;
   }
 
-  /* make the sticky calendar full-bleed relative to .content padding */
+  /* Make the calendar bleed edge-to-edge within .content padding */
   .sticky-cal {
-    top: 0;
-    margin-left: calc(-1 * var(--page-pad));
-    margin-right: calc(-1 * var(--page-pad));
-  }
-
-  /* constrain readable width but allow the grid to breathe */
-  .content-inner {
-    max-width: 720px;
-    margin: 0 auto;
+    margin-left: calc(-1 * var(--page-pad, 20px));
+    margin-right: calc(-1 * var(--page-pad, 20px));
   }
 }
