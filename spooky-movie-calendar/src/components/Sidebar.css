@@ -15,6 +15,10 @@
   --sb-link: #f6f6f6;
   --sb-link-dim: rgba(246, 246, 246, 0.8);
   --sb-link-hover: #ffffff;
+
+  --sb-pad-x: clamp(16px, 4vw, 28px);
+  --sb-pad-y: clamp(20px, 4vw, 36px);
+  --sb-gap: 20px;
 }
 
 /* clamp + 30vw ceiling */
