@@ -26,9 +26,7 @@ body {
   /* layout */
   --content-max: clamp(1100px, 86vw, 1680px);
   --page-pad: clamp(12px, 4vw, 20px); /* page gutters on small screens */
-
-  /* colors */
-  --ink: #fef5e4;
+  --cal-height: 100px /* colors */ --ink: #fef5e4;
   --ink-strong: #fef5e6;
   --accent: #e8473d; /* title red */
   --card-red-1: #e8463c;
