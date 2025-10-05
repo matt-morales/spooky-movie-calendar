@@ -3,12 +3,15 @@ import Calendar from "./components/Calendar";
 import MovieCard from "./components/MovieCard";
 import movies from "./data/movies";
 import "./App.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ensureAnonAuth } from "./lib/firebase";
 
 function App() {
+  const [uid, setUid] = useState(null);
   useEffect(() => {
-    ensureAnonAuth();
+    ensureAnonAuth().then((user) => {
+      setUid(user.uid);
+    });
   }, []);
   return (
     <div className="app">
@@ -24,14 +27,15 @@ function App() {
         {/* Constrained movie content */}
         <div className="content-inner">
           {movies.map((movie, i) => {
-            const movieId = movie.id ?? i + 1; // ensure 1..31 if not provided
+            const day = i + 1;
+            const movieId = String(movie.id ?? day);
             return (
               <section
-                id={`movie-${movieId}`}
+                id={`movie-${day}`}
                 className="movie-section"
-                key={movie.id}
+                key={movieId}
               >
-                <MovieCard movie={movie} movieId={movieId} />
+                <MovieCard uid={uid} movie={movie} movieId={movieId} />
               </section>
             );
           })}

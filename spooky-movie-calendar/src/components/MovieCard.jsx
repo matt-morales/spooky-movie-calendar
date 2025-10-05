@@ -1,18 +1,11 @@
 // components/MovieCard.jsx
 import { useEffect, useState } from "react";
-import { ensureAnonAuth } from "../lib/firebase";
 import { getMyRating, setRating, getRatingSummary } from "../services/ratings";
 import "./MovieCard.css";
 
-export default function MovieCard({ movie, movieId }) {
-  const [uid, setUid] = useState(null);
+export default function MovieCard({ uid, movie, movieId }) {
   const [myRating, setMyRating] = useState(null);
   const [summary, setSummary] = useState(null); // { average, count }
-
-  // sign in anonymously once
-  useEffect(() => {
-    ensureAnonAuth().then(setUid);
-  }, []);
 
   // load data once we have uid + movieId
   useEffect(() => {
@@ -33,8 +26,8 @@ export default function MovieCard({ movie, movieId }) {
     <article className="movie-card">
       <header className="movie-head">
         <h2 className="movie-title">{movie.title}</h2>
-        {movie.director && (
-          <div className="movie-meta">Directed by {movie.director}</div>
+        {movie.directors && (
+          <div className="movie-meta">Directed by {movie.directors}</div>
         )}
       </header>
 

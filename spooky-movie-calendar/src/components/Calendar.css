@@ -22,13 +22,46 @@
   margin: 0 0 12px;
   text-align: center;
   letter-spacing: 1.4px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.cal-caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  transition: transform 0.2s ease;
+}
+
+.cal-caret.up {
+  border-bottom: 6px solid var(--sb-ink, #f6f6f6);
+}
+
+.cal-caret.down {
+  border-top: 6px solid var(--sb-ink, #f6f6f6);
 }
 
 /* Evenly distributed 7 columns */
 .cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr); /* 7 equal columns */
+  transition:
+    max-height 0.25s ease,
+    opacity 0.25s ease;
+  grid-template-columns: repeat(7, 1fr); /* 8 equal columns */
   gap: var(--day-gap); /* consistent spacing */
+}
+
+.cal-grid.is-collapsed {
+  max-height: 0;
+  opacity: 0;
 }
 
 /* Day tile */

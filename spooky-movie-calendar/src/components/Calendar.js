@@ -12,6 +12,7 @@ export default function Calendar() {
   }, []);
 
   const [selectedDay, setSelectedDay] = useState(initialFromHash);
+  const [collapsed, setCollapsed] = useState(false);
 
   // Keep a CSS var with the sticky calendar's height up to date.
   useEffect(() => {
@@ -55,10 +56,18 @@ export default function Calendar() {
     }
   };
 
+  const toggleCollapsed = () => setCollapsed((c) => !c);
+
   return (
     <div className="cal">
-      <header className="cal-header">{monthLabel}</header>
-      <div className="cal-grid">
+      <header className="cal-header" onClick={toggleCollapsed}>
+        <span>{monthLabel}</span>
+        <span
+          className={`cal-caret ${collapsed ? "down" : "up"}`}
+          aria-hidden="true"
+        />
+      </header>
+      <div className={`cal-grid ${collapsed ? "is-collapsed" : ""}`}>
         {Array.from({ length: daysInMonth }, (_, i) => {
           const day = i + 1;
           const isSelected = day === selectedDay;
