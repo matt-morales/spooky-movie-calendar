@@ -15,11 +15,6 @@
   --sb-link: #f6f6f6;
   --sb-link-dim: rgba(246, 246, 246, 0.8);
   --sb-link-hover: #ffffff;
-
-  /* Rhythm */
-  --sb-pad-x: 24px;
-  --sb-pad-y: 32px;
-  --sb-gap: 20px;
 }
 
 /* clamp + 30vw ceiling */
@@ -70,7 +65,7 @@
   width: 100%;
   height: 100%;
   display: block;
-  preserveaspectratio: none; /* equivalent via attribute, see JSX */
+  color: var(--accent);
 }
 
 /* Body copy (Inter) */
@@ -144,6 +139,26 @@
 @media (max-width: 900px) {
   :root {
     --sb-min: 300px;
+  }
+
+  .sidebar {
+    /* release desktop rail constraints */
+    position: static !important; /* no sticky on mobile */
+    top: auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+
+    /* make it span full width */
+    flex: 0 1 auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    /* kill the clamp for width on mobile */
+    --sbw: 100vw;
+
+    /* use the same page gutter variable */
+    padding: 24px var(--page-pad, 20px) !important;
   }
 
   .sb-kicker {

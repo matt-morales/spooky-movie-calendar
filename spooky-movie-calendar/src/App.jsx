@@ -3,8 +3,13 @@ import Calendar from "./components/Calendar";
 import MovieCard from "./components/MovieCard";
 import movies from "./data/movies";
 import "./App.css";
+import { useEffect } from "react";
+import { ensureAnonAuth } from "./lib/firebase";
 
 function App() {
+  useEffect(() => {
+    ensureAnonAuth();
+  }, []);
   return (
     <div className="app">
       <Sidebar />
@@ -20,13 +25,14 @@ function App() {
         <div className="content-inner">
           {movies.map((movie, i) => {
             const day = movie.day ?? i + 1; // ensure 1..31 if not provided
+            const movieId = day;
             return (
               <section
                 id={`movie-${day}`}
                 className="movie-section"
                 key={movie.id}
               >
-                <MovieCard movie={movie} />
+                <MovieCard movie={movie} movieId={movieId} />
               </section>
             );
           })}

@@ -151,6 +151,35 @@ img {
   opacity: 0.9;
 }
 
+.rating-drop {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 0;
+}
+
+.blood-drop {
+  width: 14px;
+  height: 22px;
+  stroke: #666;
+  fill: #666;
+  transition:
+    fill 0.25s ease,
+    stroke 0.25s ease,
+    transform 0.2s ease;
+}
+
+.rating-drop.active .blood-drop {
+  fill: var(--accent, #e8473d); /* blood red */
+  stroke: var(--accent, #e8473d);
+  transform: scale(1.1);
+}
+
+.rating-drop:hover .blood-drop {
+  transform: scale(1.1);
+}
+
 /* ---------------- Footer (optional) ---------------- */
 .movie-foot {
   margin-top: 18px;
