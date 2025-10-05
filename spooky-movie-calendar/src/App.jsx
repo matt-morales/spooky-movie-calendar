@@ -24,7 +24,7 @@ function App() {
         {/* Constrained movie content */}
         <div className="content-inner">
           {movies.map((movie, i) => {
-            const day = movie.day ?? i + 1; // ensure 1..31 if not provided
+            const day = movie.date ?? i + 1; // ensure 1..31 if not provided
             const movieId = day;
             return (
               <section

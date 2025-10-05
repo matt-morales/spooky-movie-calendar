@@ -46,7 +46,7 @@ export default function MovieCard({ movie, movieId }) {
         </figure>
 
         <div className="date-badge" style={{ gridArea: "badge" }}>
-          {movie.badge ?? movie.dateLabel ?? `October ${movie.day}`}
+          {movie.date}
         </div>
 
         <div className="movie-copy" style={{ gridArea: "desc" }}>
