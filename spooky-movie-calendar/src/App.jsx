@@ -9,9 +9,7 @@ import { ensureAnonAuth } from "./lib/firebase";
 function App() {
   const [uid, setUid] = useState(null);
   useEffect(() => {
-    ensureAnonAuth().then((user) => {
-      setUid(user.uid);
-    });
+    ensureAnonAuth().then(setUid);
   }, []);
   return (
     <div className="app">

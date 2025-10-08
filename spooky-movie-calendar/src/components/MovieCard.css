@@ -141,7 +141,7 @@ img {
   letter-spacing: 0.01em;
 }
 
-/* Rating sits right under description with SAME gap as col-gap */
+/* Rating layout */
 .rating {
   margin-top: var(--col-gap);
   color: rgba(254, 245, 228, 0.9);

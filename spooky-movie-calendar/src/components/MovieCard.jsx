@@ -48,23 +48,26 @@ export default function MovieCard({ uid, movie, movieId }) {
           <div className="rating" style={{ marginTop: "var(--col-gap)" }}>
             <div>
               <span>Your rating:&nbsp;</span>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => handleRate(n)}
-                  aria-label={`Rate ${n}`}
-                  className={`rating-drop ${n <= (myRating ?? 0) ? "active" : ""}`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 9 14"
-                    className="blood-drop"
+              {[1, 2, 3, 4, 5].map((n) => {
+                const isActive = Number(myRating ?? 0) >= n * 2; // <= scale-safe
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => handleRate(n * 2)}
+                    aria-label={`Rate ${2 * n}`}
+                    className={`rating-drop ${isActive ? "active" : ""}`}
                   >
-                    <path d="M4.49781 1L6.97406 4.51576C7.46377 5.2106 7.79735 6.09603 7.93258 7.06007C8.06781 8.0241 7.99864 9.02342 7.7338 9.93163C7.46896 10.8398 7.02036 11.6161 6.44473 12.1623C5.86911 12.7085 5.19233 13 4.5 13C3.80767 13 3.13089 12.7085 2.55527 12.1623C1.97965 11.6161 1.53104 10.8398 1.2662 9.93163C1.00136 9.02342 0.932187 8.0241 1.06742 7.06007C1.20266 6.09603 1.53623 5.2106 2.02594 4.51576L4.49781 1Z" />
-                  </svg>
-                </button>
-              ))}
+                    <svg
+                      viewBox="0 0 9 14"
+                      className="blood-drop"
+                      aria-hidden="true"
+                    >
+                      <path d="M4.49781 1L6.97406 4.51576C7.46377 5.2106 7.79735 6.09603 7.93258 7.06007C8.06781 8.0241 7.99864 9.02342 7.7338 9.93163C7.46896 10.8398 7.02036 11.6161 6.44473 12.1623C5.86911 12.7085 5.19233 13 4.5 13C3.80767 13 3.13089 12.7085 2.55527 12.1623C1.97965 11.6161 1.53104 10.8398 1.2662 9.93163C1.00136 9.02342 0.932187 8.0241 1.06742 7.06007C1.20266 6.09603 1.53623 5.2106 2.02594 4.51576L4.49781 1Z" />
+                    </svg>
+                  </button>
+                );
+              })}
             </div>
 
             {summary && (
