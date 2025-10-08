@@ -72,7 +72,8 @@ export default function MovieCard({ uid, movie, movieId }) {
 
             {summary && (
               <div style={{ opacity: 0.9, marginTop: 8 }}>
-                Average rating: {summary.average.toFixed(1)} ({summary.count})
+                Average rating: {summary.average.toFixed(1) / 2} (
+                {summary.count})
               </div>
             )}
           </div>
