@@ -11,8 +11,8 @@
 # One-time setup: ./scripts/bootstrap.sh (see README "First-time setup").
 
 SHELL := /bin/bash
-# Docker Desktop may install its CLI in ~/.docker/bin without adding it to PATH.
-export PATH := $(HOME)/.docker/bin:$(PATH)
+# Docker Desktop and the Google Cloud CLI installer may not add themselves to PATH.
+export PATH := $(HOME)/.docker/bin:$(HOME)/google-cloud-sdk/bin:$(PATH)
 TF := terraform -chdir=infra
 
 # Deploy credentials from the git-ignored .secrets.env, if present (CI sets

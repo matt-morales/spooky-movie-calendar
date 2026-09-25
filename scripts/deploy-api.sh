@@ -2,6 +2,7 @@
 # Build the Go API image with ko (no Docker), push it to Artifact Registry and
 # roll it out on Cloud Run. Same script locally and in GitHub Actions.
 set -euo pipefail
+export PATH="$HOME/google-cloud-sdk/bin:$PATH" # where Google's installer puts gcloud
 cd "$(dirname "$0")/.."
 set -a; source deploy.env; [ -f .secrets.env ] && source .secrets.env; set +a
 

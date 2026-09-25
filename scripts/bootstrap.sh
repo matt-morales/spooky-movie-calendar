@@ -4,6 +4,7 @@
 #   - creates the GCS bucket that holds Terraform state
 #   - writes infra/backend.hcl and infra/terraform.tfvars
 set -euo pipefail
+export PATH="$HOME/google-cloud-sdk/bin:$PATH" # where Google's installer puts gcloud
 cd "$(dirname "$0")/.."
 
 need() { command -v "$1" >/dev/null || { echo "Missing $1. $2"; exit 1; }; }
