@@ -15,3 +15,6 @@ infra/.terraform/
 
 # Local deploy credentials (see .secrets.env)
 .secrets.env
+
+# Saved Terraform plans may contain secrets
+infra/tfplan

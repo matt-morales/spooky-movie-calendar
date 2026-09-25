@@ -42,3 +42,9 @@ variable "monthly_budget_usd" {
   type        = number
   default     = 5
 }
+
+variable "neon_org_id" {
+  description = "Neon organization that owns the project (needed with organization API keys)."
+  type        = string
+  default     = null
+}

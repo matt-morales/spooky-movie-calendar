@@ -101,14 +101,15 @@ resource "google_cloud_run_v2_service" "api" {
   invoker_iam_disabled = true
   deletion_protection  = false
 
-  scaling {
-    # Scale to zero when idle; cap instances so a traffic spike (or abuse)
-    # can't run up a bill.
-    min_instance_count = 0
-    max_instance_count = 2
-  }
-
   template {
+    # Scale to zero when idle; cap instances so a traffic spike (or abuse)
+    # can't run up a bill. (Revision-level scaling: the service-level
+    # `scaling` block failed on this project with an opaque internal error.)
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 2
+    }
+
     service_account                  = google_service_account.api.email
     max_instance_request_concurrency = 80
     timeout                          = "30s"

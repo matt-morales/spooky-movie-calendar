@@ -3,6 +3,7 @@
 
 resource "neon_project" "db" {
   name       = "spooky-movie-calendar"
+  org_id     = var.neon_org_id
   region_id  = var.neon_region
   pg_version = 17
 
