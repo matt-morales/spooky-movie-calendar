@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 set -a; source deploy.env; [ -f .secrets.env ] && source .secrets.env; set +a
 
 gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet >/dev/null 2>&1
-IMAGE=$(cd go && KO_DOCKER_REPO="$IMAGE_REPO" go tool ko build ./cmd/api --bare --image-label "org.opencontainers.image.revision=$(git rev-parse HEAD)")
+IMAGE=$(cd go && KO_DOCKER_REPO="$IMAGE_REPO/api" go tool ko build ./cmd/api --bare --image-label "org.opencontainers.image.revision=$(git rev-parse HEAD)")
 echo "Built $IMAGE"
 
 gcloud run deploy "$API_SERVICE" --image "$IMAGE" --region "$GCP_REGION" --project "$GCP_PROJECT" --quiet
