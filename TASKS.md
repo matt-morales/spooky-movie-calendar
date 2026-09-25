@@ -21,8 +21,12 @@ The earlier tasks 1–3 are complete in code. The decisions and reasoning are in
 
 ## 1. Go live
 
-- [ ] Do the one-time [first-time setup](README.md#first-time-setup): tokens, `bootstrap.sh`, `make infra`, `make upload-posters`, `make deploy`, and the GitHub secrets.
-- [ ] Check the migrated UI in real browsers, including phones ([docs/mobile-testing.md](docs/mobile-testing.md)). It's covered by tests but hasn't been looked at by a person yet.
+- [x] Infrastructure created, posters uploaded, API and site deployed, DNS cut over from GitHub Pages (2026-09-26). Verified with the Playwright suite against https://31nightsofhorror.com.
+- [ ] GitHub: add the `CLOUDFLARE_API_TOKEN` and `NEON_API_KEY` secrets, create the `production` environment, turn off GitHub Pages, then merge `migrate-to-cloudflare-gcp` so pushes to `main` deploy automatically.
+- [ ] Post a real comment on the live site to confirm Turnstile works end to end (it can't be automated).
+- [ ] Delete the empty Neon onboarding project (`31nightsofhorror`); Terraform's project is `spooky-movie-calendar`.
+- [ ] Optional: remove the leftover GoDaddy `NS` records and the unused `_domainconnect` record in Cloudflare DNS.
+- [ ] Look over the live site on a real phone ([docs/mobile-testing.md](docs/mobile-testing.md)). Automated desktop and phone-size browser tests pass.
 - [ ] Run `make import-firestore-ratings`, then switch off Firestore and Auth in the Firebase project.
 - [ ] Add `billing_account_id` to `infra/terraform.tfvars` to turn on the budget alert.
 
