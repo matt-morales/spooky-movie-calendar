@@ -1,0 +1,10 @@
+# ko builds the API container from Go source (no Docker or Dockerfile needed).
+# `make deploy-api` runs: go tool ko build ./cmd/api
+defaultBaseImage: cgr.dev/chainguard/static # minimal, non-root, CA certs + tzdata
+defaultPlatforms:
+  - linux/amd64
+builds:
+  - id: api
+    main: ./cmd/api
+    flags: [-trimpath]
+    ldflags: [-s, -w]

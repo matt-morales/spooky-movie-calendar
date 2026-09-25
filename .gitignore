@@ -1,0 +1,17 @@
+.dev/
+
+# Go / tools
+go/api
+
+# Node
+node_modules/
+ts/apps/web/dist/
+.wrangler/
+
+# Terraform
+infra/.terraform/
+*.tfstate
+*.tfstate.*
+
+# Local deploy credentials (see .secrets.env)
+.secrets.env

@@ -1,0 +1,136 @@
+/* ===========================
+   Sidebar.css
+   =========================== */
+
+.sidebar {
+  flex: 0 0 var(--width-sidebar);
+  min-width: var(--width-sidebar);
+  max-width: var(--width-sidebar);
+  container-type: inline-size;
+
+  background: var(--bg-panel);
+  color: var(--text-panel);
+  padding: clamp(20px, 4vw, 36px) clamp(16px, 4vw, 28px);
+  min-height: 100vh;
+
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Content block under the title */
+.sb-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sb-kicker {
+  margin: 6px 0 0 0;
+  text-transform: uppercase;
+  color: var(--text-panel);
+}
+
+.sb-squiggle-wrap {
+  width: 100%;
+  margin: 6px 0 2px;
+  aspect-ratio: 341 / 14;
+}
+
+.sb-squiggle {
+  width: 100%;
+  height: 100%;
+  display: block;
+  color: var(--accent);
+}
+
+.sb-body {
+  margin: 0;
+  color: var(--text-panel-muted);
+}
+
+/* Thin rule to separate links */
+.sb-rule {
+  border: 0;
+  height: 1px;
+  background: var(--border-faint);
+  margin: var(--space-sm) 0 6px 0;
+}
+
+/* Links list */
+.sb-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sb-links li {
+  margin-bottom: var(--space-md);
+}
+
+.sb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  color: var(--text-panel);
+  text-decoration: none;
+  position: relative;
+  padding-bottom: var(--space-xs);
+}
+
+.sb-link-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Underline grows in on hover */
+.sb-link-text {
+  position: relative;
+}
+
+.sb-link-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+
+.sb-link:hover .sb-link-text::after {
+  transform: scaleX(1);
+}
+
+/* Small screens: full-width block above the content */
+@media (max-width: 900px) {
+  .sidebar {
+    position: static;
+    min-height: 0;
+    flex: 0 1 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    padding: var(--space-xl) var(--space-page);
+  }
+
+  .sb-kicker {
+    letter-spacing: 2px;
+  }
+  .sb-squiggle-wrap {
+    margin-top: var(--space-xs);
+  }
+  .sb-squiggle path {
+    stroke-width: 1.6px;
+  }
+}

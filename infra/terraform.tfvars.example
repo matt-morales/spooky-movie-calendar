@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars (committed: these are identifiers, not secrets).
+cloudflare_account_id = "your-cloudflare-account-id"
+gcp_project           = "nightsofhorror-50265"
+# billing_account_id  = "XXXXXX-XXXXXX-XXXXXX"   # enables the budget alert

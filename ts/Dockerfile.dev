@@ -1,0 +1,12 @@
+# Local container for the Vite dev server (used by compose.yaml).
+# In production the site is a static build on Cloudflare Pages.
+FROM node:22-alpine
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY apps/web/package.json apps/web/
+COPY packages/comment/package.json packages/comment/
+RUN npm ci
+COPY . .
+EXPOSE 3000
+# vite.config.ts sets port 3000 and host: true (listen on all interfaces).
+CMD ["npm", "run", "dev", "-w", "@spooky/web"]

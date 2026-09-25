@@ -1,0 +1,156 @@
+// Package storetest is the contract every comment.Store adapter must pass.
+// Adapters call Run from their own tests with a factory for an empty store.
+package storetest
+
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/matt-morales/spooky-movie-calendar/go/pkg/comment"
+)
+
+func Run(t *testing.T, newStore func(t *testing.T) comment.Store) {
+	t.Run("InsertAndGet", func(t *testing.T) { insertAndGet(t, newStore(t)) })
+	t.Run("GetMissing", func(t *testing.T) { getMissing(t, newStore(t)) })
+	t.Run("ListThreadPagesRootsWithDescendants", func(t *testing.T) { listThread(t, newStore(t)) })
+	t.Run("CountByAuthorSince", func(t *testing.T) { countByAuthor(t, newStore(t)) })
+	t.Run("SetStatus", func(t *testing.T) { setStatus(t, newStore(t)) })
+}
+
+var base = time.Date(2025, 10, 1, 20, 0, 0, 0, time.UTC)
+
+func insert(t *testing.T, s comment.Store, c comment.Comment) comment.Comment {
+	t.Helper()
+	if c.ThreadKey == "" {
+		c.ThreadKey = "movie:2025-01"
+	}
+	if c.AuthorID == "" {
+		c.AuthorID = "v1"
+	}
+	if c.Body == "" {
+		c.Body = "boo"
+	}
+	if c.Status == "" {
+		c.Status = comment.StatusVisible
+	}
+	if c.CreatedAt.IsZero() {
+		c.CreatedAt = base
+	}
+	got, err := s.Insert(context.Background(), c)
+	if err != nil {
+		t.Fatalf("Insert: %v", err)
+	}
+	return got
+}
+
+func insertAndGet(t *testing.T, s comment.Store) {
+	a := insert(t, s, comment.Comment{AuthorName: "Sidney", Body: "What's your favorite scary movie?"})
+	b := insert(t, s, comment.Comment{ParentID: a.ID, Depth: 1})
+
+	if a.ID == 0 || b.ID <= a.ID {
+		t.Fatalf("IDs should be assigned and increasing: %d, %d", a.ID, b.ID)
+	}
+
+	got, err := s.Get(context.Background(), b.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := b
+	if got.ID != want.ID || got.ParentID != a.ID || got.Depth != 1 || got.ThreadKey != want.ThreadKey ||
+		got.AuthorID != want.AuthorID || got.Body != want.Body || got.Status != comment.StatusVisible ||
+		!got.CreatedAt.Equal(want.CreatedAt) {
+		t.Errorf("round trip mismatch:\n got  %+v\n want %+v", got, want)
+	}
+
+	got, _ = s.Get(context.Background(), a.ID)
+	if got.AuthorName != "Sidney" || got.ParentID != 0 {
+		t.Errorf("root round trip mismatch: %+v", got)
+	}
+}
+
+func getMissing(t *testing.T, s comment.Store) {
+	if _, err := s.Get(context.Background(), 12345); !errors.Is(err, comment.ErrNotFound) {
+		t.Errorf("got %v, want ErrNotFound", err)
+	}
+}
+
+func listThread(t *testing.T, s comment.Store) {
+	ctx := context.Background()
+	r1 := insert(t, s, comment.Comment{})
+	r1a := insert(t, s, comment.Comment{ParentID: r1.ID, Depth: 1})
+	r1b := insert(t, s, comment.Comment{ParentID: r1a.ID, Depth: 2})
+	r2 := insert(t, s, comment.Comment{})
+	r3 := insert(t, s, comment.Comment{})
+	insert(t, s, comment.Comment{ThreadKey: "movie:2025-02"}) // other thread
+
+	// Newest two roots, no replies among them.
+	got, err := s.ListThread(ctx, "movie:2025-01", 0, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertIDs(t, got, r3.ID, r2.ID)
+
+	// Next page: the oldest root plus its whole subtree.
+	got, err = s.ListThread(ctx, "movie:2025-01", r2.ID, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertIDs(t, got, r1.ID, r1a.ID, r1b.ID)
+}
+
+func countByAuthor(t *testing.T, s comment.Store) {
+	insert(t, s, comment.Comment{AuthorID: "a", CreatedAt: base})
+	insert(t, s, comment.Comment{AuthorID: "a", CreatedAt: base.Add(time.Minute)})
+	insert(t, s, comment.Comment{AuthorID: "b", CreatedAt: base.Add(time.Minute)})
+
+	n, err := s.CountByAuthorSince(context.Background(), "a", base.Add(30*time.Second))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 1 {
+		t.Errorf("count = %d, want 1", n)
+	}
+}
+
+func setStatus(t *testing.T, s comment.Store) {
+	ctx := context.Background()
+	c := insert(t, s, comment.Comment{})
+	if err := s.SetStatus(ctx, c.ID, comment.StatusHidden); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := s.Get(ctx, c.ID)
+	if got.Status != comment.StatusHidden {
+		t.Errorf("status = %s, want hidden", got.Status)
+	}
+	if err := s.SetStatus(ctx, 999999, comment.StatusHidden); !errors.Is(err, comment.ErrNotFound) {
+		t.Errorf("missing: got %v, want ErrNotFound", err)
+	}
+}
+
+// assertIDs checks the set of returned IDs; order within a page is not part
+// of the contract (the service builds the tree).
+func assertIDs(t *testing.T, got []comment.Comment, want ...comment.ID) {
+	t.Helper()
+	seen := map[comment.ID]bool{}
+	for _, c := range got {
+		seen[c.ID] = true
+	}
+	if len(got) != len(want) {
+		t.Fatalf("got %d comments %v, want %v", len(got), idsOf(got), want)
+	}
+	for _, id := range want {
+		if !seen[id] {
+			t.Fatalf("got %v, want %v", idsOf(got), want)
+		}
+	}
+}
+
+func idsOf(cs []comment.Comment) []comment.ID {
+	out := make([]comment.ID, len(cs))
+	for i, c := range cs {
+		out[i] = c.ID
+	}
+	return out
+}

@@ -1,0 +1,23 @@
+/* Self-hosted fonts (SIL Open Font License; see public/fonts/LICENSE-*.txt).
+   Both files are preloaded in index.html, so they arrive with the page
+   instead of after a round trip to a third-party font service. */
+
+/* The hero title is sized for this narrow display font. A wider fallback
+   overflows it ("NIGHTS" clips, "MOVIES" wraps), so the browser waits for
+   the real font (block) rather than flashing a fallback first. */
+@font-face {
+  font-family: "Bebas Neue";
+  src: url("/fonts/bebas-neue-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+/* Body text reads fine in a system fallback, so show it immediately. */
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
