@@ -44,31 +44,15 @@
   filter: drop-shadow(0 0 0.06em rgba(232, 71, 61, 0.55));
 }
 
+/* The iris follows the gaze (--gx, --gy) set by the component, in quick saccades. */
 .eye-iris {
-  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translate(calc(var(--gx) * 1px), calc(var(--gy) * 1px));
+  transition: transform var(--ms) cubic-bezier(0.3, 0, 0.2, 1);
 }
 
-.eye.look-right .eye-iris {
-  transform: translateX(16px);
-}
-
-.eye.look-left .eye-iris {
-  transform: translateX(-16px);
-}
-
-/* Eyelids rest outside the eye (clipped) and meet in the middle to blink. */
-.eye-lid {
-  transition: transform 0.09s ease-in-out;
-}
-
-.eye-lid-top {
-  transform: translateY(-46px);
-}
-
-.eye-lid-bottom {
-  transform: translateY(46px);
-}
-
-.eye.blink .eye-lid {
-  transform: none;
+.eye-pupil {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(var(--pupil));
+  transition: transform 0.35s ease-out;
 }
