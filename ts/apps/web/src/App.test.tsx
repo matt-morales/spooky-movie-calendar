@@ -1,4 +1,4 @@
-import type { CommentClient } from "@spooky/comment";
+import type { CommentClient, ThreadPage } from "@spooky/comment";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -40,7 +40,7 @@ function setup(api: Partial<Api> = {}) {
       flushOnExit: vi.fn(),
     } satisfies Analytics,
     comments: {
-      thread: vi.fn(async () => ({ comments: [], nextBefore: 0 })),
+      thread: vi.fn(async (): Promise<ThreadPage> => ({ comments: [], nextBefore: 0 })),
       post: vi.fn(async (_key, input) => ({
         id: 7,
         parentId: 0,
