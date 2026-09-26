@@ -21,6 +21,7 @@ import (
 
 type Catalog interface {
 	Movies(ctx context.Context, year int, visitor domain.VisitorID) ([]app.MovieWithRating, error)
+	Lineup(ctx context.Context, year int) (domain.Lineup, error)
 }
 
 type Rater interface {
@@ -96,6 +97,11 @@ type movieJSON struct {
 	Rating        ratingJSON `json:"rating"`
 }
 
+type lineupJSON struct {
+	Year              int    `json:"year"`
+	LetterboxdListURL string `json:"letterboxdListUrl,omitempty"`
+}
+
 func (s *server) listMovies(w http.ResponseWriter, r *http.Request) {
 	year := s.CurrentYear()
 	if q := r.URL.Query().Get("year"); q != "" {
@@ -112,6 +118,11 @@ func (s *server) listMovies(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
+	lineup, err := s.Catalog.Lineup(r.Context(), year)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
 
 	out := make([]movieJSON, len(movies))
 	for i, m := range movies {
@@ -124,7 +135,10 @@ func (s *server) listMovies(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Cache-Control", "private, no-store")
-	writeJSON(w, http.StatusOK, map[string]any{"movies": out})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"movies": out,
+		"lineup": lineupJSON{Year: lineup.Year, LetterboxdListURL: lineup.LetterboxdListURL},
+	})
 }
 
 func (s *server) imageURL(path string) string {

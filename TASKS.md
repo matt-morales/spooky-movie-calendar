@@ -32,15 +32,14 @@ The earlier tasks 1–3 are complete in code. The decisions and reasoning are in
 
 ## 2. Content
 
-- [ ] Check descriptions that look inaccurate: *Incantation*, *House of Psychotic Women* (the credited director is questionable) and *Friday the 13th: The Final Chapter*. Fix them with a new migration (`UPDATE movies ...`).
-- [ ] Add release years and Letterboxd links (the `release_year` and `letterboxd_url` columns already exist).
+- [ ] Check descriptions that look inaccurate: *Incantation*, *House of Psychotic Women* and *Friday the 13th: The Final Chapter*. Fix them with a new migration (`UPDATE movies ...`). (The wrong directors for *The Hills Have Eyes*, *House of Psychotic Women* and *Gonjiam* were fixed in `000003`.)
+- [x] Release years and Letterboxd links for 2025 (`000003_letterboxd_links`). Each year's Letterboxd list URL is in the `lineups` table and returned as `lineup.letterboxdListUrl` by `GET /api/movies`.
 - [ ] 2026 lineup:
-  1. Add a `000003_movies_2026.up.sql` migration.
-  2. Add the posters to `assets/posters`.
-  3. Run `make upload-posters`.
-  4. Set `VITE_LINEUP_YEAR=2026`.
-
-  Some 2026 candidates' posters are already in `assets/posters`: *1408*, *Dawn of the Dead*, *Girl, Interrupted*, *Mama* and *The Blair Witch Project*.
+  1. [x] `000004_movies_2026` seeds nights 1–26 from https://letterboxd.com/mattmo/list/31-nights-of-horror-2026/, with posters in `assets/posters/<letterboxd-slug>.jpg`.
+  2. [ ] Add nights 27–31 once they're on the list (new migration + posters).
+  3. [ ] Run `make upload-posters`.
+  4. [ ] Frontend: read the list link from `lineup.letterboxdListUrl` instead of hard-coding it in `Sidebar.tsx`, and check how the calendar handles missing nights.
+  5. [ ] Set `VITE_LINEUP_YEAR=2026`.
 
 ## 3. Operations
 

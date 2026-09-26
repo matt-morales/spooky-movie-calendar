@@ -1,6 +1,9 @@
 -- name: ListMoviesByYear :many
 SELECT * FROM movies WHERE year = $1 ORDER BY day;
 
+-- name: GetLineup :one
+SELECT * FROM lineups WHERE year = $1;
+
 -- name: MovieExists :one
 SELECT EXISTS (SELECT 1 FROM movies WHERE id = $1);
 

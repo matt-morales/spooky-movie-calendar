@@ -7,10 +7,12 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"io/fs"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/matt-morales/spooky-movie-calendar/go/internal/adapter/postgres/internal/db"
 	"github.com/matt-morales/spooky-movie-calendar/go/internal/domain"
@@ -72,6 +74,17 @@ func (s *Store) ListMovies(ctx context.Context, year int) ([]domain.Movie, error
 		}
 	}
 	return out, nil
+}
+
+func (s *Store) Lineup(ctx context.Context, year int) (domain.Lineup, error) {
+	r, err := s.q.GetLineup(ctx, int32(year))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.Lineup{}, domain.ErrLineupNotFound
+	}
+	if err != nil {
+		return domain.Lineup{}, err
+	}
+	return domain.Lineup{Year: int(r.Year), LetterboxdListURL: r.LetterboxdListUrl}, nil
 }
 
 func (s *Store) MovieExists(ctx context.Context, id domain.MovieID) (bool, error) {

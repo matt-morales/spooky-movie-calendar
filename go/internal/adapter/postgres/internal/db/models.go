@@ -24,6 +24,11 @@ type Event struct {
 	ReceivedAt time.Time
 }
 
+type Lineup struct {
+	Year              int32
+	LetterboxdListUrl string
+}
+
 type Movie struct {
 	ID            string
 	Year          int32

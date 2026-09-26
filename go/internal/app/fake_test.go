@@ -11,7 +11,19 @@ import (
 // In-memory fakes of the driven ports. The real adapters are tested against
 // Postgres in adapter/postgres.
 
-type fakeMovies struct{ movies []domain.Movie }
+type fakeMovies struct {
+	movies  []domain.Movie
+	lineups []domain.Lineup
+}
+
+func (f *fakeMovies) Lineup(_ context.Context, year int) (domain.Lineup, error) {
+	for _, l := range f.lineups {
+		if l.Year == year {
+			return l, nil
+		}
+	}
+	return domain.Lineup{}, domain.ErrLineupNotFound
+}
 
 func (f *fakeMovies) ListMovies(_ context.Context, year int) ([]domain.Movie, error) {
 	var out []domain.Movie

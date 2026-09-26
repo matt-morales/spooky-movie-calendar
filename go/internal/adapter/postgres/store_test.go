@@ -3,7 +3,9 @@ package postgres_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -68,6 +70,79 @@ func TestMigrationsSeedThe2025Lineup(t *testing.T) {
 	none, _ := s.ListMovies(ctx, 1999)
 	if len(none) != 0 {
 		t.Errorf("unexpected movies for 1999")
+	}
+}
+
+func TestEvery2025MovieLinksToLetterboxd(t *testing.T) {
+	s, _ := newStore(t)
+
+	movies, err := s.ListMovies(ctx, 2025)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, m := range movies {
+		if !strings.HasPrefix(m.LetterboxdURL, "https://letterboxd.com/film/") || m.ReleaseYear == 0 {
+			t.Errorf("%s %q: letterboxd %q, release year %d", m.ID, m.Title, m.LetterboxdURL, m.ReleaseYear)
+		}
+	}
+	if m := movies[0]; m.LetterboxdURL != "https://letterboxd.com/film/christine-1983/" || m.ReleaseYear != 1983 {
+		t.Errorf("Christine = %q, %d", m.LetterboxdURL, m.ReleaseYear)
+	}
+	// Directors that didn't match the film the poster (and link) shows.
+	for day, want := range map[int]string{26: "Alexandre Aja", 28: "Carlos Aured", 29: "Jung Bum-shik"} {
+		if got := movies[day-1].Directors; len(got) != 1 || got[0] != want {
+			t.Errorf("day %d directors = %v, want [%s]", day, got, want)
+		}
+	}
+}
+
+func TestMigrationsSeedThe2026Lineup(t *testing.T) {
+	s, _ := newStore(t)
+
+	movies, err := s.ListMovies(ctx, 2026)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(movies) != 26 {
+		t.Fatalf("got %d movies, want 26", len(movies))
+	}
+	first := movies[0]
+	if first.ID != "2026-01" || first.Title != "Backrooms" || first.ReleaseYear != 2026 ||
+		len(first.Directors) != 1 || first.Directors[0] != "Kane Parsons" ||
+		first.PosterPath != "posters/backrooms-2026.jpg" || first.Description == "" ||
+		first.LetterboxdURL != "https://letterboxd.com/film/backrooms-2026/" ||
+		!first.Date.Equal(time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)) {
+		t.Errorf("first movie = %+v", first)
+	}
+	if m := movies[4]; m.Title != "Late Night with the Devil" || m.HostRating != 7 || len(m.Directors) != 2 {
+		t.Errorf("day 5 = %+v", m)
+	}
+	if m := movies[6]; m.Title != "Trick 'r Treat" {
+		t.Errorf("apostrophe mangled: %q", m.Title)
+	}
+	if m := movies[25]; m.Day != 26 || m.Title != "When Evil Lurks" {
+		t.Errorf("last movie = %+v", m)
+	}
+}
+
+func TestLineupLinksToItsLetterboxdList(t *testing.T) {
+	s, _ := newStore(t)
+
+	for year, want := range map[int]string{
+		2025: "https://letterboxd.com/snowkempm/list/31-nights-of-halloween-whore-movies/",
+		2026: "https://letterboxd.com/mattmo/list/31-nights-of-horror-2026/",
+	} {
+		l, err := s.Lineup(ctx, year)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if l.Year != year || l.LetterboxdListURL != want {
+			t.Errorf("lineup %d = %+v", year, l)
+		}
+	}
+
+	if _, err := s.Lineup(ctx, 1999); !errors.Is(err, domain.ErrLineupNotFound) {
+		t.Errorf("1999: err = %v, want ErrLineupNotFound", err)
 	}
 }
 
