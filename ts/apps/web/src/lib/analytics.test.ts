@@ -45,6 +45,18 @@ describe("analytics", () => {
     ]);
   });
 
+  it("works on plain HTTP, where browsers don't provide crypto.randomUUID", async () => {
+    // e.g. the dev site opened on a phone at http://192.168.x.x:3000
+    vi.stubGlobal("crypto", { getRandomValues: crypto.getRandomValues.bind(crypto) });
+    try {
+      const { analytics, sent } = setup();
+      await analytics.pageView();
+      expect(sent[0]?.[0]?.sessionId).toMatch(/^[0-9a-f]{32}$/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("batches later events and sends them together", async () => {
     const { analytics, sent } = setup();
 

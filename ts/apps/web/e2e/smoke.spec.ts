@@ -4,7 +4,8 @@ import { expect, test } from "@playwright/test";
 
 test("loads the lineup, rates a movie and opens its reviews", async ({ page }) => {
   const errors: string[] = [];
-  page.on("pageerror", (e) => errors.push(e.message));
+  // Cloudflare's analytics beacon rejects localhost; that error is expected in dev.
+  page.on("pageerror", (e) => !/cloudflareinsights\.com/.test(e.message) && errors.push(e.message));
 
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Christine" })).toBeVisible();

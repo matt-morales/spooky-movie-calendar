@@ -87,8 +87,11 @@ export function createAnalytics(deps: Deps): Analytics {
   };
 }
 
+// 32 random hex characters. Not crypto.randomUUID(): browsers only provide
+// that over HTTPS, and the dev site is opened on phones over plain HTTP.
 function randomId(): string {
-  return crypto.randomUUID().replaceAll("-", "");
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /** Wires analytics to the real browser. */
