@@ -34,10 +34,9 @@ describe("house stories", () => {
       }
     });
 
-    it("begins and ends with the house as drawn, door open", () => {
-      expect(story.still.door).toBe(1);
-      expect(story.frameAt(0).door).toBe(1);
-      expect(story.frameAt(story.loop - 0.01)).toEqual(story.still);
+    it("begins and ends on its still frame, so the loop is seamless", () => {
+      expectSameFrame(story.frameAt(0), story.still);
+      expectSameFrame(story.frameAt(story.loop - 0.01), story.still);
     });
 
     it("is a pure function of time", () => {

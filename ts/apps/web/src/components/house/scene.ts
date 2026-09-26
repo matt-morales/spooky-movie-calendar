@@ -13,9 +13,10 @@ export const INK = "#050303";
 export const DOOR = { x: 231.5, left: 226, top: 272, width: 11, height: 20 };
 export const WINDOW = { x: 206, y: 248, width: 11, height: 14 }; // upstairs, nearest the door
 export const ATTIC = { x: 216, y: 214, width: 9, height: 10 }; // the small window under the roof peak
+export const WING = { x: 251, y: 262, width: 10, height: 12 }; // the bottom-right window, on the side wing
 
 /** Clip paths and filters defined by the stage, for stories to draw with. */
-export const CLIP = { window: "url(#sb-window)", attic: "url(#sb-attic)" } as const;
+export const CLIP = { window: "url(#sb-window)", attic: "url(#sb-attic)", wing: "url(#sb-wing)" } as const;
 export const FILTER = { windowGlow: "url(#sb-glow)", eyeGlow: "url(#sb-eye-glow)" } as const;
 
 /** What the stage itself needs from every frame of a story. */
@@ -28,8 +29,9 @@ export interface SceneFrame {
  * story at random when the page loads.
  *
  * - frameAt(t) is a pure function from seconds (0 ≤ t < loop) to what to draw.
- *   It must start and end with the house as drawn (`still`), so the loop and
- *   the reduced-motion view are seamless (enforced by stories/contract.test).
+ *   It must start and end on its `still` frame (no characters showing; the
+ *   door may be open or shut), so the loop and the reduced-motion view are
+ *   seamless (enforced by stories/contract.test).
  * - Inside draws in the windows: over the window light, behind the window bars.
  * - Outside draws outdoors: over the ground, behind the big trees in front.
  */
@@ -37,7 +39,7 @@ export interface HouseStory<F extends SceneFrame = SceneFrame> {
   id: string; // for ?story=<id>
   title: string;
   loop: number; // seconds, including a quiet rest at the end
-  still: F; // the house as drawn: shown before the story starts and for reduced motion
+  still: F; // the empty scene: shown before the story starts and for reduced motion
   frameAt(t: number): F;
   Inside?: ComponentType<{ frame: F }>;
   Outside?: ComponentType<{ frame: F }>;

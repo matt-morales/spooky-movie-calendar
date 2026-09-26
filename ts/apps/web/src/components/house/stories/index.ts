@@ -6,9 +6,10 @@
 // the tests. stories/contract.test.tsx checks every story in the list.
 
 import type { AnyHouseStory } from "../scene";
+import { abduction } from "./abduction";
 import { runForIt } from "./runForIt";
 
-export const STORIES: AnyHouseStory[] = [runForIt];
+export const STORIES: AnyHouseStory[] = [runForIt, abduction];
 
 export function pickStory(
   stories: readonly AnyHouseStory[],

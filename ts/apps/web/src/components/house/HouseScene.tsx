@@ -1,5 +1,5 @@
 import { memo, type Ref } from "react";
-import { ATTIC, DOOR, INK, WINDOW, type AnyHouseStory, type SceneFrame } from "./scene";
+import { ATTIC, DOOR, INK, WING, WINDOW, type AnyHouseStory, type SceneFrame } from "./scene";
 
 // The stage: bare trees and a house with the lights on, fading up into the
 // sidebar. A story (see stories/) draws its characters into two layers:
@@ -58,6 +58,9 @@ const Backdrop = memo(function Backdrop() {
         <clipPath id="sb-attic">
           <rect x={ATTIC.x} y={ATTIC.y} width={ATTIC.width} height={ATTIC.height} />
         </clipPath>
+        <clipPath id="sb-wing">
+          <rect x={WING.x} y={WING.y} width={WING.width} height={WING.height} />
+        </clipPath>
         <filter id="sb-eye-glow" x="-200%" y="-200%" width="500%" height="500%">
           <feGaussianBlur stdDeviation="0.5" result="blur" />
           <feMerge>
@@ -99,7 +102,7 @@ function Lights({ door }: { door: number }) {
       <rect x="188" y="248" width="11" height="14" />
       <rect x={WINDOW.x} y={WINDOW.y} width={WINDOW.width} height={WINDOW.height} />
       <rect x={ATTIC.x} y={ATTIC.y} width={ATTIC.width} height={ATTIC.height} />
-      <rect x="251" y="262" width="10" height="12" />
+      <rect x={WING.x} y={WING.y} width={WING.width} height={WING.height} />
       {/* The open doorway; it narrows to nothing as the door swings shut. */}
       <rect
         data-part="door-light"
