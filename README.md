@@ -221,6 +221,15 @@ Component CSS uses role tokens only. The comment package's CSS uses the same rol
 
 **Fonts are self-hosted** in `public/fonts` (Bebas Neue for display, Inter for body, both under the Open Font License) and preloaded in `index.html`. The hero title is sized for narrow Bebas Neue and overflows in any fallback font, so that face uses `font-display: block`: the browser briefly waits for it instead of flashing the wrong font. Don't switch back to a third-party font service.
 
+### The haunted house
+
+The house at the bottom of the sidebar is a stage (`ts/apps/web/src/components/house/`) that plays one of several short **stories**, picked at random on each page load. Add `?story=<id>` to the URL to watch a particular one (for example `?story=run-for-it`).
+
+- **The stage** (`HouseScene.tsx`) draws the trees, fog and house. Stories draw into two layers: *inside* the windows (behind the window bars) and *outdoors* (over the ground, behind the big trees). They can also open and shut the door.
+- **A story** (`stories/*.tsx`) is a `defineStory({ id, title, loop, still, frameAt, Inside, Outside })`. `frameAt(t)` is a pure function from seconds to what to draw, so every beat is unit-tested. Shared geometry and helpers (door and window positions, `groundY`, easing) are in `scene.ts`, and reusable characters (the stick figure, `runAcross`, `standAt`) are in `actors.tsx`.
+- **To add one:** write `stories/<name>.tsx`, add it to `STORIES` in `stories/index.ts`, and run the tests. `stories/contract.test.tsx` checks every registered story: unique id, seamless loop, and starting and ending with the house as drawn.
+- **Cost:** about 2 KB of JavaScript. The clock only re-renders when the frame changes, stops completely while the house is scrolled out of view (then resumes where it left off), pauses in background tabs, and never runs for visitors who prefer reduced motion.
+
 ## Infrastructure decisions
 
 These were decided in September 2026. The goals were **about $0/month**, **little setup and upkeep**, **keeping Cloudflare** since it already hosts DNS, and a **real Go server** rather than Go compiled to WebAssembly.

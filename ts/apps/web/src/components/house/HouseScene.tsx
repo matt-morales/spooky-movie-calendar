@@ -1,45 +1,28 @@
-import { memo, useEffect, useState } from "react";
-import { DOOR, WINDOW, storyAt, type FigureFrame, type StoryFrame } from "./houseStory";
+import { memo, type Ref } from "react";
+import { ATTIC, DOOR, INK, WINDOW, type AnyHouseStory, type SceneFrame } from "./scene";
 
-// Bare trees and a house with the lights on, fading up into the sidebar. A
-// stick figure acts out a short story around the house (see houseStory.ts).
+// The stage: bare trees and a house with the lights on, fading up into the
+// sidebar. A story (see stories/) draws its characters into two layers:
+// inside the windows, and outdoors.
 
-const INK = "#050303"; // the silhouette colour of the house, trees and figure
-
-export default function HauntedHouse({ startDelay = 1.5 }: { startDelay?: number }) {
-  const seconds = useStoryClock(startDelay);
-  return <HouseScene frame={seconds === null ? storyAt(-1) : storyAt(seconds)} />;
-}
-
-/** Seconds since the story started, or null before it starts or when the
- * visitor prefers reduced motion (then the scene stays as drawn). */
-function useStoryClock(startDelay: number): number | null {
-  const [seconds, setSeconds] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const start = performance.now() + startDelay * 1000;
-    let frame = 0;
-    const tick = (now: number) => {
-      if (now >= start) setSeconds((now - start) / 1000);
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [startDelay]);
-
-  return seconds;
-}
-
-export function HouseScene({ frame }: { frame: StoryFrame }) {
+export function HouseScene({
+  story,
+  frame,
+  ref,
+}: {
+  story: AnyHouseStory;
+  frame: SceneFrame;
+  ref?: Ref<HTMLDivElement>;
+}) {
+  const { Inside, Outside } = story;
   return (
-    <div className="sb-scene" aria-hidden="true">
+    <div className="sb-scene" aria-hidden="true" ref={ref}>
       <svg viewBox="0 0 400 320" preserveAspectRatio="xMidYMax slice">
         <Backdrop />
         <Lights door={frame.door} />
-        {frame.peek && <WindowPeek rise={frame.peek.rise} look={frame.peek.look} />}
+        <g data-layer="inside">{Inside && <Inside frame={frame} />}</g>
         <Foreground />
-        {frame.figure && <StickFigure figure={frame.figure} />}
+        <g data-layer="outside">{Outside && <Outside frame={frame} />}</g>
         <NearTrees />
       </svg>
     </div>
@@ -72,6 +55,17 @@ const Backdrop = memo(function Backdrop() {
         <clipPath id="sb-window">
           <rect x={WINDOW.x} y={WINDOW.y} width={WINDOW.width} height={WINDOW.height} />
         </clipPath>
+        <clipPath id="sb-attic">
+          <rect x={ATTIC.x} y={ATTIC.y} width={ATTIC.width} height={ATTIC.height} />
+        </clipPath>
+        <filter id="sb-eye-glow" x="-200%" y="-200%" width="500%" height="500%">
+          <feGaussianBlur stdDeviation="0.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
 
       <rect width="400" height="320" fill="url(#sb-sky)" />
@@ -104,7 +98,7 @@ function Lights({ door }: { door: number }) {
     <g fill="#ff3b30" filter="url(#sb-glow)">
       <rect x="188" y="248" width="11" height="14" />
       <rect x={WINDOW.x} y={WINDOW.y} width={WINDOW.width} height={WINDOW.height} />
-      <rect x="216" y="214" width="9" height="10" />
+      <rect x={ATTIC.x} y={ATTIC.y} width={ATTIC.width} height={ATTIC.height} />
       <rect x="251" y="262" width="10" height="12" />
       {/* The open doorway; it narrows to nothing as the door swings shut. */}
       <rect
@@ -119,31 +113,11 @@ function Lights({ door }: { door: number }) {
   );
 }
 
-// Head and shoulders rising into the upstairs window. The window's crossbars
-// split it into four panes; looking left or right moves the head into the
-// upper-left or upper-right pane so it reads clearly at this size.
-function WindowPeek({ rise, look }: { rise: number; look: number }) {
-  const cx = WINDOW.x + WINDOW.width / 2;
-  const bottom = WINDOW.y + WINDOW.height;
-  const drop = (1 - rise) * WINDOW.height;
-  const lean = look * 2.8;
-  return (
-    <g data-part="peek" fill={INK} clipPath="url(#sb-window)">
-      <g transform={`translate(0 ${drop})`}>
-        <circle cx={cx + lean} cy={WINDOW.y + 3.9} r="2.2" />
-        <path
-          d={`M${cx + lean * 0.4 - 5} ${bottom}Q${cx + lean * 0.4 - 5} ${bottom - 5.5} ${cx + lean * 0.4} ${bottom - 5.5}Q${cx + lean * 0.4 + 5} ${bottom - 5.5} ${cx + lean * 0.4 + 5} ${bottom}Z`}
-        />
-      </g>
-    </g>
-  );
-}
-
 const Foreground = memo(function Foreground() {
   return (
     <>
       {/* Window bars, drawn over anyone looking out */}
-      <g stroke={INK} strokeWidth="1.5">
+      <g data-part="window-bars" stroke={INK} strokeWidth="1.5">
         <path d="M193.5 248v14M188 255h11M211.5 248v14M206 255h11M256 262v12" />
       </g>
 
@@ -154,51 +128,10 @@ const Foreground = memo(function Foreground() {
   );
 });
 
-// A stick figure about 17 units tall, drawn with its feet at the origin,
-// facing right. Legs and arms swing opposite each other with the stride.
-function StickFigure({ figure }: { figure: FigureFrame }) {
-  const { x, y, facing, pose, stride } = figure;
-  const running = pose === "run";
-  const bounce = running ? -Math.abs(stride) * 0.7 : 0;
-  const lean = running ? 1.4 : 0;
-
-  const hip = { x: 0, y: -6.5 };
-  const shoulder = { x: lean, y: -11.5 };
-  const limb = (from: { x: number; y: number }, degrees: number, length: number) => {
-    const r = (degrees * Math.PI) / 180;
-    return `M${from.x} ${from.y}L${from.x + Math.sin(r) * length} ${from.y + Math.cos(r) * length}`;
-  };
-
-  const legSwing = running ? stride * 38 : 12;
-  const armSwing = running ? stride * 45 : 14;
-  const arms =
-    pose === "look"
-      ? // One hand shading the eyes, the other at the side.
-        `M${shoulder.x} ${shoulder.y}L2.4 -12.2L1.2 -14.6${limb(shoulder, -14, 5)}`
-      : `${limb(shoulder, -armSwing, 5)}${limb(shoulder, armSwing, 5)}`;
-
-  return (
-    <g
-      data-part="figure"
-      transform={`translate(${x} ${y + bounce})${facing === -1 ? " scale(-1 1)" : ""}`}
-      stroke={INK}
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    >
-      <circle cx={lean + (pose === "look" ? 0.6 : 0)} cy="-14.3" r="2.3" fill={INK} stroke="none" />
-      <path d={`M${shoulder.x} ${shoulder.y}L${hip.x} ${hip.y}`} />
-      <path d={`${limb(hip, legSwing, 6.5)}${limb(hip, -legSwing, 6.5)}`} />
-      <path d={arms} />
-    </g>
-  );
-}
-
 const NearTrees = memo(function NearTrees() {
   const near = { stroke: INK, fill: "none", strokeLinecap: "round" } as const;
   return (
-    <g {...near}>
+    <g data-part="near-trees" {...near}>
       <path d="M34 322C40 270 30 226 44 170" strokeWidth="10" />
       <path d="M42 206C66 186 88 174 118 140M42 234C20 214 8 196-8 190M44 178C52 146 46 124 60 96M60 96C70 80 80 74 98 58M56 126C38 106 30 98 18 72M92 164C102 150 118 148 132 122M118 140C130 132 140 132 152 120M18 72C12 60 4 54-6 50" strokeWidth="4" />
       <path d="M98 58C104 48 108 40 112 28M78 74C74 62 70 54 62 46M132 122C138 110 142 104 150 98M30 98C20 94 12 94 2 98M8 196C0 184-2 176-6 166M66 186C70 176 76 170 86 166" strokeWidth="1.8" />

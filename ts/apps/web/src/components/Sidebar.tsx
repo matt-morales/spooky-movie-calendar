@@ -1,4 +1,4 @@
-import HauntedHouse from "./HauntedHouse";
+import HauntedHouse from "./house/HauntedHouse";
 import Title from "./Title";
 import "./Sidebar.css";
 
