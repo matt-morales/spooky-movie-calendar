@@ -8,8 +8,9 @@
 import type { AnyHouseStory } from "../scene";
 import { abduction } from "./abduction";
 import { runForIt } from "./runForIt";
+import { siege } from "./siege";
 
-export const STORIES: AnyHouseStory[] = [runForIt, abduction];
+export const STORIES: AnyHouseStory[] = [runForIt, abduction, siege];
 
 export function pickStory(
   stories: readonly AnyHouseStory[],

@@ -21,6 +21,6 @@ describe("pickStory", () => {
   });
 
   it("includes the original story", () => {
-    expect(STORIES.map((s) => s.id)).toEqual(expect.arrayContaining(["run-for-it", "abduction"]));
+    expect(STORIES.map((s) => s.id)).toEqual(expect.arrayContaining(["run-for-it", "abduction", "siege"]));
   });
 });

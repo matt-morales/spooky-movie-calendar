@@ -9,3 +9,12 @@ describe("groundY", () => {
     expect(groundY(400)).toBeCloseTo(286, 0);
   });
 });
+
+describe("the windows", () => {
+  it("names the three lower windows, left to right", async () => {
+    const { LOWER_WINDOWS } = await import("./scene");
+    expect(LOWER_WINDOWS.map((w) => w.id)).toEqual(["left", "right", "wing"]);
+    expect(LOWER_WINDOWS[0]!.x).toBeLessThan(LOWER_WINDOWS[1]!.x);
+    expect(LOWER_WINDOWS[1]!.x).toBeLessThan(LOWER_WINDOWS[2]!.x);
+  });
+});

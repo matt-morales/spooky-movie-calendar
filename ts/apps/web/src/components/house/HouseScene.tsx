@@ -1,5 +1,5 @@
 import { memo, type Ref } from "react";
-import { ATTIC, DOOR, INK, WING, WINDOW, type AnyHouseStory, type SceneFrame } from "./scene";
+import { ATTIC, DOOR, INK, WING, WINDOW, WINDOW_LEFT, type AnyHouseStory, type SceneFrame } from "./scene";
 
 // The stage: bare trees and a house with the lights on, fading up into the
 // sidebar. A story (see stories/) draws its characters into two layers:
@@ -52,6 +52,13 @@ const Backdrop = memo(function Backdrop() {
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
+        <clipPath id="sb-window-left">
+          <rect x={WINDOW_LEFT.x} y={WINDOW_LEFT.y} width={WINDOW_LEFT.width} height={WINDOW_LEFT.height} />
+        </clipPath>
+        {/* The sky side of the ground line: things drawn with it rise from behind the horizon. */}
+        <clipPath id="sb-above-horizon">
+          <path d="M-50-50H450V286H400C340 276 290 288 222 290 160 292 80 280 0 296H-50Z" />
+        </clipPath>
         <clipPath id="sb-window">
           <rect x={WINDOW.x} y={WINDOW.y} width={WINDOW.width} height={WINDOW.height} />
         </clipPath>
@@ -99,7 +106,7 @@ const Backdrop = memo(function Backdrop() {
 function Lights({ door }: { door: number }) {
   return (
     <g fill="#ff3b30" filter="url(#sb-glow)">
-      <rect x="188" y="248" width="11" height="14" />
+      <rect x={WINDOW_LEFT.x} y={WINDOW_LEFT.y} width={WINDOW_LEFT.width} height={WINDOW_LEFT.height} />
       <rect x={WINDOW.x} y={WINDOW.y} width={WINDOW.width} height={WINDOW.height} />
       <rect x={ATTIC.x} y={ATTIC.y} width={ATTIC.width} height={ATTIC.height} />
       <rect x={WING.x} y={WING.y} width={WING.width} height={WING.height} />
