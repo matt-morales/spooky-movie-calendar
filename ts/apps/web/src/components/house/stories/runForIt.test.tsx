@@ -13,7 +13,8 @@ const { runInEnd, closedAt, peekFrom, peekTo, openAt, lookLeftAt, lookRightAt, r
 
 describe("storyAt", () => {
   it("starts with the figure off-screen to the left, running toward the house, door open", () => {
-    const f = storyAt(0);
+    expect(storyAt(0).figure).toBeNull();
+    const f = storyAt(STORY.runInFrom + 0.01);
     expect(f.figure).toMatchObject({ pose: "run", facing: 1 });
     expect(f.figure!.x).toBeLessThan(0);
     expect(f.door).toBe(1);

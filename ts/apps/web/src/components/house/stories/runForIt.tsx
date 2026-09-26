@@ -35,6 +35,7 @@ export interface LurkerFrame {
 
 // Beats of the story, in seconds.
 export const STORY = {
+  runInFrom: 0.3, // a moment of empty scene first, so the loop starts on the still frame
   runInEnd: 2.6,
   inside: 2.9, // steps through the doorway
   closedAt: 3.4,
@@ -62,7 +63,8 @@ function frameAt(seconds: number): RunForItFrame {
   const rest = STILL;
 
   // Runs in and steps through the doorway.
-  if (t < s.runInEnd) return { ...rest, figure: runAcross(t, 0, s.runInEnd, START_X, DOOR.x) };
+  if (t < s.runInFrom) return rest;
+  if (t < s.runInEnd) return { ...rest, figure: runAcross(t, s.runInFrom, s.runInEnd, START_X, DOOR.x) };
   if (t < s.inside) return { ...rest, figure: standAt(DOOR.x, "stand", 1) };
 
   // Shuts the door behind it.
