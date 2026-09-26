@@ -159,6 +159,15 @@
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+/* No movie yet: a dimmed, dead-signal tile (see MissingTape) */
+.cal-day.is-missing {
+  color: var(--text-faint);
+  background:
+    repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 3px),
+    var(--bg-control);
+  border-style: dashed;
+}
+
 /* Watched: a small dot under the number */
 .cal-day.is-watched::after {
   content: "";

@@ -87,11 +87,25 @@ describe("App", () => {
     expect(screen.getByText("October 2025")).toBeInTheDocument();
   });
 
-  it("builds the calendar from the lineup", async () => {
+  it("builds the calendar for the whole month, marking nights without a movie yet", async () => {
     setup();
     await screen.findByRole("heading", { name: "Christine" });
-    const days = within(screen.getByRole("group", { name: "Choose a night" })).getAllByRole("button");
-    expect(days.map((d) => d.textContent).sort()).toEqual(["1", "2"]);
+    const calendar = screen.getByRole("group", { name: "Choose a night" });
+    const days = within(calendar).getAllByRole("button");
+    expect(days.map((d) => d.textContent)).toEqual(Array.from({ length: 31 }, (_, i) => String(i + 1)));
+    expect(within(calendar).getByRole("button", { name: "3, no tape yet" })).toBeInTheDocument();
+  });
+
+  it("shows a missing tape for each night without a movie, alternating lines", async () => {
+    setup();
+    await screen.findByRole("heading", { name: "Christine" });
+
+    const tapes = screen.getAllByRole("article", { name: "No signal" });
+    expect(tapes).toHaveLength(29);
+    expect(tapes[0]).toHaveTextContent("Tape 3: footage unrecovered.");
+    expect(tapes[0]).toHaveTextContent("October 3rd");
+    expect(tapes[1]).toHaveTextContent("The tape is blank. For now.");
+    expect(document.getElementById("movie-31")).toContainElement(tapes[28]!);
   });
 
   it("shows an error when the lineup can't be loaded", async () => {
