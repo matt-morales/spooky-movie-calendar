@@ -13,6 +13,7 @@ import (
 var (
 	ErrInvalidMovieID = errors.New("invalid movie id")
 	ErrMovieNotFound  = errors.New("movie not found")
+	ErrLineupNotFound = errors.New("lineup not found")
 	ErrInvalidRating  = errors.New("rating must be 2, 4, 6, 8 or 10")
 )
 
@@ -45,10 +46,16 @@ type Movie struct {
 	Title         string
 	Directors     []string
 	Description   string
-	PosterPath    string // relative to the images base URL, e.g. "posters/2025/christine.jpg"
+	PosterPath    string // relative to the images base URL, e.g. "posters/christine.jpg"
 	ReleaseYear   int    // 0 if unknown
 	LetterboxdURL string
 	HostRating    int // the curator's own rating out of 10, 0 if none
+}
+
+// Lineup is a year's list as a whole, as opposed to its nights.
+type Lineup struct {
+	Year              int
+	LetterboxdListURL string // the list the lineup is published as; "" if none
 }
 
 // RatingValue is stored on a 2–10 scale and shown as 1–5 blood drops.

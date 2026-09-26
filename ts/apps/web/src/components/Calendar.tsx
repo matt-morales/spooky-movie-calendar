@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { localIsoDate, monthLabel } from "../lib/format";
+import { nightsOf } from "../lib/nights";
 import { useAppState, useDispatch, useServices } from "../state/AppState";
 import { calendarToggled, daySelected } from "../state/events";
 import "./Calendar.css";
@@ -74,11 +75,18 @@ export default function Calendar() {
         </ul>
       </div>
       <div className={`cal-grid ${collapsed ? "is-collapsed" : ""}`} role="group" aria-label="Choose a night">
-        {movies.items.map(({ id, day, date }) => {
+        {nightsOf(movies.items).map(({ day, date, movie }) => {
           const isSelected = day === selectedDay;
           const isToday = date === today;
-          const isWatched = watched.includes(id);
-          const classes = ["cal-day", isSelected && "is-selected", isToday && "is-today", isWatched && "is-watched"];
+          const isWatched = movie !== null && watched.includes(movie.id);
+          const classes = [
+            "cal-day",
+            isSelected && "is-selected",
+            isToday && "is-today",
+            isWatched && "is-watched",
+            !movie && "is-missing",
+          ];
+          const label = !movie ? `${day}, no tape yet` : isWatched ? `${day}, watched` : undefined;
           return (
             <button
               key={day}
@@ -86,7 +94,7 @@ export default function Calendar() {
               className={classes.filter(Boolean).join(" ")}
               aria-pressed={isSelected}
               aria-current={isToday ? "date" : undefined}
-              aria-label={isWatched ? `${day}, watched` : undefined}
+              aria-label={label}
               onClick={() => handleClick(day)}
             >
               {day}

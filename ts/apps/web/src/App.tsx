@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import Calendar from "./components/Calendar";
+import MissingTape from "./components/MissingTape";
 import MovieCard from "./components/MovieCard";
 import Sidebar from "./components/Sidebar";
+import { nightsOf } from "./lib/nights";
 import { useAppState, useDispatch, useServices } from "./state/AppState";
 import { loadMovies } from "./state/effects";
 import "./App.css";
@@ -36,9 +38,9 @@ export default function App({ year }: { year: number }) {
               We couldn't load the movies. Please refresh to try again.
             </p>
           )}
-          {movies.items.map((movie) => (
-            <section id={`movie-${movie.day}`} className="movie-section" key={movie.id}>
-              <MovieCard movie={movie} />
+          {nightsOf(movies.items).map((night) => (
+            <section id={`movie-${night.day}`} className="movie-section" key={night.day}>
+              {night.movie ? <MovieCard movie={night.movie} /> : <MissingTape night={night} />}
             </section>
           ))}
         </div>

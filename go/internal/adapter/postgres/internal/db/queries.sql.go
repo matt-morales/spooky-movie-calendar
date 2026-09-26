@@ -11,6 +11,17 @@ import (
 	"time"
 )
 
+const getLineup = `-- name: GetLineup :one
+SELECT year, letterboxd_list_url FROM lineups WHERE year = $1
+`
+
+func (q *Queries) GetLineup(ctx context.Context, year int32) (Lineup, error) {
+	row := q.db.QueryRow(ctx, getLineup, year)
+	var i Lineup
+	err := row.Scan(&i.Year, &i.LetterboxdListUrl)
+	return i, err
+}
+
 type InsertEventsParams struct {
 	Type       string
 	Source     string

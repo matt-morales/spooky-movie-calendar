@@ -1,0 +1,115 @@
+/* ===========================
+   MissingTape.css — a night with no movie yet: a dead-signal TV screen in
+   place of the poster and details. Reuses the card's date column (.tile-date
+   from MovieTile.css).
+   =========================== */
+
+.missing-tape {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "date screen";
+  column-gap: clamp(20px, 2.2vw, 36px); /* matches .tile */
+  align-items: start;
+  box-shadow: var(--shadow-card);
+}
+
+.tape-screen {
+  grid-area: screen;
+  position: relative;
+  display: grid;
+  place-content: center;
+  gap: var(--space-sm);
+  min-height: clamp(140px, 16vw, 200px);
+  padding: var(--space-xl);
+  overflow: hidden;
+  text-align: center;
+  background: var(--color-void);
+  border-radius: var(--radius-md);
+}
+
+/* Scanlines over a faint snow of static. */
+.tape-screen::before,
+.tape-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tape-screen::before {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.05) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+.tape-screen::after {
+  inset: -50%;
+  opacity: 0.08;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.9) 0.5px, transparent 0.6px),
+    radial-gradient(rgba(255, 255, 255, 0.6) 0.5px, transparent 0.6px);
+  background-size:
+    3px 3px,
+    5px 5px;
+  background-position:
+    0 0,
+    1px 2px;
+  animation: tape-static 0.4s steps(4) infinite;
+}
+
+.tape-title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(28px, 3vw, 44px);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-panel);
+  animation: tape-flicker 4s linear infinite;
+}
+
+.tape-line {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+@keyframes tape-static {
+  25% { transform: translate(-3%, 2%); }
+  50% { transform: translate(2%, -3%); }
+  75% { transform: translate(-1%, -2%); }
+}
+
+@keyframes tape-flicker {
+  0%, 18%, 22%, 61%, 63%, 100% { opacity: 1; }
+  20%, 62% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tape-screen::after,
+  .tape-title {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .missing-tape {
+    column-gap: var(--space-md);
+  }
+
+  .tape-screen {
+    padding: var(--space-lg);
+  }
+
+  .tape-title {
+    letter-spacing: 0.2em;
+  }
+}

@@ -40,6 +40,19 @@ func TestCatalogMergesRatingsIntoMovies(t *testing.T) {
 	}
 }
 
+func TestCatalogLineup(t *testing.T) {
+	list := domain.Lineup{Year: 2025, LetterboxdListURL: "https://letterboxd.com/someone/list/x/"}
+	catalog := app.NewCatalog(&fakeMovies{movies: lineup, lineups: []domain.Lineup{list}}, &fakeRatings{})
+
+	if got, err := catalog.Lineup(ctx, 2025); err != nil || got != list {
+		t.Errorf("2025 = %+v, %v", got, err)
+	}
+	// A year without a lineup row still has movies to show, just no list link.
+	if got, err := catalog.Lineup(ctx, 2030); err != nil || got != (domain.Lineup{Year: 2030}) {
+		t.Errorf("2030 = %+v, %v", got, err)
+	}
+}
+
 func TestRateValidatesInput(t *testing.T) {
 	ratings := app.NewRatings(&fakeMovies{movies: lineup}, &fakeRatings{}, app.NewAnalytics(&fakeEvents{}, clock), clock)
 

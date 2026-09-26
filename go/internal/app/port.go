@@ -13,6 +13,8 @@ import (
 type MovieRepository interface {
 	ListMovies(ctx context.Context, year int) ([]domain.Movie, error)
 	MovieExists(ctx context.Context, id domain.MovieID) (bool, error)
+	// Lineup returns domain.ErrLineupNotFound if the year has no lineup row.
+	Lineup(ctx context.Context, year int) (domain.Lineup, error)
 }
 
 type RatingRepository interface {

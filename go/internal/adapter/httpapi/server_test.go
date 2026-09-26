@@ -35,6 +35,10 @@ func (s *stubCatalog) Movies(_ context.Context, year int, v domain.VisitorID) ([
 	}}, nil
 }
 
+func (s *stubCatalog) Lineup(_ context.Context, year int) (domain.Lineup, error) {
+	return domain.Lineup{Year: year, LetterboxdListURL: "https://letterboxd.com/someone/list/x/"}, nil
+}
+
 type stubRater struct{ err error }
 
 func (s stubRater) Rate(_ context.Context, _ domain.VisitorID, id string, v int) (domain.RatingSummary, error) {
@@ -107,10 +111,14 @@ func TestListMovies(t *testing.T) {
 	}
 	var body struct {
 		Movies []map[string]any `json:"movies"`
+		Lineup map[string]any   `json:"lineup"`
 	}
 	json.NewDecoder(rec.Body).Decode(&body)
 	if len(body.Movies) != 1 {
 		t.Fatalf("body = %+v", body)
+	}
+	if body.Lineup["year"] != 2025.0 || body.Lineup["letterboxdListUrl"] != "https://letterboxd.com/someone/list/x/" {
+		t.Errorf("lineup = %+v", body.Lineup)
 	}
 	m := body.Movies[0]
 	if m["id"] != "2025-01" || m["date"] != "2025-10-01" || m["posterUrl"] != "https://images.example.com/posters/christine.jpg" {

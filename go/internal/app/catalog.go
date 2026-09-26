@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 
 	"github.com/matt-morales/spooky-movie-calendar/go/internal/domain"
 )
@@ -36,4 +37,14 @@ func (c *Catalog) Movies(ctx context.Context, year int, visitor domain.VisitorID
 		out[i] = MovieWithRating{Movie: m, Rating: summaries[m.ID]}
 	}
 	return out, nil
+}
+
+// Lineup describes a year's list. A year without a lineup row gets an empty
+// one rather than an error: its movies can still be shown.
+func (c *Catalog) Lineup(ctx context.Context, year int) (domain.Lineup, error) {
+	l, err := c.movies.Lineup(ctx, year)
+	if errors.Is(err, domain.ErrLineupNotFound) {
+		return domain.Lineup{Year: year}, nil
+	}
+	return l, err
 }
