@@ -12,9 +12,12 @@ body,
   height: 100%;
 }
 
+/* clip, not hidden: `hidden` on both makes <body> its own scroll box instead
+   of the window, and Android Chrome then ignores smooth scrolls, so the
+   calendar's date buttons did nothing there. */
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {

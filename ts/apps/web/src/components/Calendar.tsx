@@ -40,7 +40,6 @@ export default function Calendar() {
 
   const handleClick = (day: number) => {
     dispatch(daySelected(day));
-    analytics.track("day_selected", { day });
 
     const el = document.getElementById(`movie-${day}`);
     if (el) {
@@ -49,6 +48,9 @@ export default function Calendar() {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
       window.history.replaceState(null, "", `#movie-${day}`);
     }
+
+    // Last, so analytics can never stop the tap from working.
+    analytics.track("day_selected", { day });
   };
 
   const toggleCollapsed = () => {
