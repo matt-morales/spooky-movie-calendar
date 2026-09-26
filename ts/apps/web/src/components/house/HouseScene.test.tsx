@@ -50,3 +50,12 @@ describe("HouseScene", () => {
     expect(container.querySelector("#sb-attic")).not.toBeNull();
   });
 });
+
+describe("HouseScene clip paths", () => {
+  it("offers every lower window and the sky above the horizon", () => {
+    const { container } = render(<HouseScene story={story} frame={story.still} />);
+    for (const id of ["sb-window-left", "sb-window", "sb-wing", "sb-attic", "sb-above-horizon"]) {
+      expect(container.querySelector(`#${id}`), id).not.toBeNull();
+    }
+  });
+});

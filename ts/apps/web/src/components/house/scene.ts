@@ -11,12 +11,27 @@ export const INK = "#050303";
 
 // Features of the drawn house.
 export const DOOR = { x: 231.5, left: 226, top: 272, width: 11, height: 20 };
-export const WINDOW = { x: 206, y: 248, width: 11, height: 14 }; // upstairs, nearest the door
+export const WINDOW_LEFT = { x: 188, y: 248, width: 11, height: 14 }; // the cross window furthest from the door
+export const WINDOW = { x: 206, y: 248, width: 11, height: 14 }; // the cross window nearest the door
 export const ATTIC = { x: 216, y: 214, width: 9, height: 10 }; // the small window under the roof peak
 export const WING = { x: 251, y: 262, width: 10, height: 12 }; // the bottom-right window, on the side wing
 
 /** Clip paths and filters defined by the stage, for stories to draw with. */
-export const CLIP = { window: "url(#sb-window)", attic: "url(#sb-attic)", wing: "url(#sb-wing)" } as const;
+export const CLIP = {
+  windowLeft: "url(#sb-window-left)",
+  window: "url(#sb-window)",
+  attic: "url(#sb-attic)",
+  wing: "url(#sb-wing)",
+  aboveHorizon: "url(#sb-above-horizon)", // hides anything below the ground line, to rise from behind it
+} as const;
+
+/** The three lower windows, left to right, with their clip paths. */
+export const LOWER_WINDOWS = [
+  { id: "left", ...WINDOW_LEFT, clip: CLIP.windowLeft },
+  { id: "right", ...WINDOW, clip: CLIP.window },
+  { id: "wing", ...WING, clip: CLIP.wing },
+] as const;
+export type WindowId = (typeof LOWER_WINDOWS)[number]["id"];
 export const FILTER = { windowGlow: "url(#sb-glow)", eyeGlow: "url(#sb-eye-glow)" } as const;
 
 /** What the stage itself needs from every frame of a story. */
