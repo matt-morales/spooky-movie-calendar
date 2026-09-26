@@ -1,9 +1,9 @@
 import { act, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import HauntedHouse, { HouseScene } from "./HauntedHouse";
-import { DOOR, STORY, WINDOW, storyAt } from "./houseStory";
+import { ATTIC, DOOR, STORY, WINDOW, storyAt } from "./houseStory";
 
-const rest = { figure: null, door: 1, peek: null };
+const rest = { figure: null, door: 1, peek: null, lurker: null };
 
 describe("HouseScene", () => {
   it("draws the house as designed when nothing is happening", () => {
@@ -43,6 +43,34 @@ describe("HouseScene", () => {
     const centre = WINDOW.x + WINDOW.width / 2; // where the vertical window bar is
     expect(head(STORY.peekFrom + 1)).toBeLessThan(centre - 2); // clear of the bar, in the left pane
     expect(head(STORY.peekTo - 1)).toBeGreaterThan(centre + 2);
+  });
+});
+
+describe("the figure in the attic", () => {
+  const lurking = (p: number) =>
+    render(<HouseScene frame={storyAt(STORY.lurkFrom + (STORY.lurkTo - STORY.lurkFrom) * p)} />).container;
+
+  it("is only visible through the attic window", () => {
+    const scene = lurking(0.5);
+    const lurker = scene.querySelector("[data-part=lurker]")!;
+    expect(lurker).not.toBeNull();
+    expect(lurker.getAttribute("clip-path")).toBe("url(#sb-attic)");
+    expect(scene.querySelector("#sb-attic rect")).toHaveAttribute("width", String(ATTIC.width));
+  });
+
+  it("has glowing red eyes once it has risen", () => {
+    expect(lurking(0.01).querySelector("[data-part=lurker-eyes]")).toHaveAttribute("opacity", "0");
+    expect(lurking(0.6).querySelector("[data-part=lurker-eyes]")).toHaveAttribute("opacity", "1");
+  });
+
+  it("raises a knife above its head", () => {
+    // The blade is drawn from the hand to the tip; the tip is its second point.
+    const tipY = (p: number) => {
+      const d = lurking(p).querySelector("[data-part=knife]")!.getAttribute("d")!;
+      const numbers = [...d.matchAll(/-?\d+(\.\d+)?/g)].map((m) => Number(m[0]));
+      return numbers[3]!;
+    };
+    expect(tipY(0.6)).toBeLessThan(tipY(0.01) - 4); // raised high, not held down
   });
 });
 

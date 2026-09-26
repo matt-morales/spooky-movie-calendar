@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { DOOR, STORY, groundY, storyAt } from "./houseStory";
+import { ATTIC, DOOR, STORY, groundY, storyAt } from "./houseStory";
 
 // Times of each beat in the story, in seconds from the start of a loop.
-const { runInEnd, closedAt, peekFrom, peekTo, openAt, lookLeftAt, lookRightAt, runOutFrom, runOutEnd, loop } = STORY;
+const { runInEnd, closedAt, peekFrom, peekTo, openAt, lookLeftAt, lookRightAt, runOutFrom, runOutEnd, lurkFrom, lurkTo, loop } =
+  STORY;
 
 describe("storyAt", () => {
   it("starts with the figure off-screen to the left, running toward the house, door open", () => {
@@ -61,9 +62,34 @@ describe("storyAt", () => {
     expect(storyAt(runOutEnd).figure!.x).toBeGreaterThan(400);
   });
 
+  it("then something rises into the attic window, raises a knife and heads downstairs", () => {
+    expect(lurkFrom).toBeGreaterThan(runOutEnd); // only once the figure has fled
+    expect(lurkTo).toBeLessThan(loop);
+    expect(storyAt(lurkFrom - 0.05).lurker).toBeNull();
+    expect(storyAt(lurkTo + 0.05).lurker).toBeNull();
+
+    const at = (p: number) => storyAt(lurkFrom + (lurkTo - lurkFrom) * p).lurker!;
+    // Rises slowly from below the sill...
+    expect(at(0.01).rise).toBeLessThan(0.1);
+    expect(at(0.35).rise).toBe(1);
+    // ...its eyes light up and it raises the knife...
+    expect(at(0.01).eyes).toBe(0);
+    expect(at(0.6).eyes).toBe(1);
+    expect(at(0.01).knife).toBe(0);
+    expect(at(0.6).knife).toBe(1);
+    // ...then slips out of view to the left.
+    expect(at(0.6).exit).toBe(0);
+    expect(at(0.99).exit).toBeGreaterThan(0.9);
+
+    const scene = storyAt(lurkFrom + 1);
+    expect(scene.figure).toBeNull();
+    expect(scene.door).toBe(1);
+    expect(ATTIC.width).toBeGreaterThan(0);
+  });
+
   it("rests with the scene as drawn (door open, nobody around) until it loops", () => {
-    const resting = storyAt(runOutEnd + 0.5);
-    expect(resting).toEqual({ figure: null, door: 1, peek: null });
+    const resting = storyAt(lurkTo + 0.5);
+    expect(resting).toEqual({ figure: null, door: 1, peek: null, lurker: null });
     expect(storyAt(loop + 0.5)).toEqual(storyAt(0.5));
   });
 

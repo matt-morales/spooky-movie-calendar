@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from "react";
-import { DOOR, WINDOW, storyAt, type FigureFrame, type StoryFrame } from "./houseStory";
+import { ATTIC, DOOR, WINDOW, storyAt, type FigureFrame, type LurkerFrame, type StoryFrame } from "./houseStory";
 
 // Bare trees and a house with the lights on, fading up into the sidebar. A
 // stick figure acts out a short story around the house (see houseStory.ts).
@@ -38,6 +38,7 @@ export function HouseScene({ frame }: { frame: StoryFrame }) {
         <Backdrop />
         <Lights door={frame.door} />
         {frame.peek && <WindowPeek rise={frame.peek.rise} look={frame.peek.look} />}
+        {frame.lurker && <Lurker {...frame.lurker} />}
         <Foreground />
         {frame.figure && <StickFigure figure={frame.figure} />}
         <NearTrees />
@@ -72,6 +73,17 @@ const Backdrop = memo(function Backdrop() {
         <clipPath id="sb-window">
           <rect x={WINDOW.x} y={WINDOW.y} width={WINDOW.width} height={WINDOW.height} />
         </clipPath>
+        <clipPath id="sb-attic">
+          <rect x={ATTIC.x} y={ATTIC.y} width={ATTIC.width} height={ATTIC.height} />
+        </clipPath>
+        <filter id="sb-eye-glow" x="-200%" y="-200%" width="500%" height="500%">
+          <feGaussianBlur stdDeviation="0.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
 
       <rect width="400" height="320" fill="url(#sb-sky)" />
@@ -134,6 +146,52 @@ function WindowPeek({ rise, look }: { rise: number; look: number }) {
         <path
           d={`M${cx + lean * 0.4 - 5} ${bottom}Q${cx + lean * 0.4 - 5} ${bottom - 5.5} ${cx + lean * 0.4} ${bottom - 5.5}Q${cx + lean * 0.4 + 5} ${bottom - 5.5} ${cx + lean * 0.4 + 5} ${bottom}Z`}
         />
+      </g>
+    </g>
+  );
+}
+
+// A hunched, hooded figure in the attic window, drawn with the middle of its
+// shoulders at the sill. It rises from below, its eyes light up red, it
+// raises a knife, then slips away to the left and down, as if taking the
+// stairs. Everything is clipped to the window.
+function Lurker({ rise, eyes, knife, exit }: LurkerFrame) {
+  const x = ATTIC.x + ATTIC.width / 2 - exit * 11;
+  const y = ATTIC.y + ATTIC.height + (1 - rise) * 11 + exit * 3 - Math.abs(Math.sin(exit * Math.PI * 4)) * 0.6;
+
+  // The knife arm swings from hanging down (165°) to held high (12°), in
+  // degrees from straight up. The blade carries on from the hand.
+  const shoulder = { x: 3.2, y: -3.8 };
+  const angle = ((165 - 153 * knife) * Math.PI) / 180;
+  const dir = { x: Math.sin(angle), y: -Math.cos(angle) };
+  const hand = { x: shoulder.x + dir.x * 3.6, y: shoulder.y + dir.y * 3.6 };
+  const tip = { x: hand.x + dir.x * 2.6, y: hand.y + dir.y * 2.6 };
+
+  return (
+    <g data-part="lurker" clipPath="url(#sb-attic)">
+      <g transform={`translate(${x} ${y})`}>
+        <path
+          d="M-4.8 1L-4.5-2.6Q-4-4.2-2.3-4.6Q-3-6.3-2.7-7.6Q-2.2-9.6 0-9.9Q2.2-9.6 2.7-7.6Q3-6.3 2.3-4.6Q4-4.2 4.5-2.6L4.8 1Z"
+          fill={INK}
+        />
+        <path
+          d={`M${shoulder.x} ${shoulder.y}L${hand.x} ${hand.y}`}
+          stroke={INK}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        <path
+          data-part="knife"
+          d={`M${hand.x} ${hand.y}L${tip.x} ${tip.y}`}
+          stroke="#f7f3f3"
+          strokeWidth="1.05"
+          strokeLinecap="round"
+        />
+        {/* Slanted, glowing eyes in the dark of the hood. */}
+        <g data-part="lurker-eyes" opacity={eyes} fill="#ff5a3c" filter="url(#sb-eye-glow)">
+          <ellipse cx="-1.05" cy="-6.6" rx="0.8" ry="0.46" transform="rotate(18 -1.05 -6.6)" />
+          <ellipse cx="1.05" cy="-6.6" rx="0.8" ry="0.46" transform="rotate(-18 1.05 -6.6)" />
+        </g>
       </g>
     </g>
   );

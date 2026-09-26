@@ -2,7 +2,9 @@
 //
 //   a stick figure runs into the house and shuts the door, peers out of an
 //   upstairs window, comes back down, opens the door, looks left, then right,
-//   and runs off-screen. Then the scene rests and the story loops.
+//   and runs off-screen. Then something rises into the attic window, eyes
+//   glowing red, raises a knife and heads downstairs after him. Then the
+//   scene rests and the story loops.
 //
 // storyAt(t) is a pure function from time to what to draw, so the whole
 // sequence is unit-tested; HauntedHouse just renders its result.
@@ -22,11 +24,22 @@ export interface StoryFrame {
   figure: FigureFrame | null; // null when it's indoors or off-screen
   door: number; // 0 = shut, 1 = open
   peek: { rise: number; look: number } | null; // head and shoulders in the upstairs window
+  lurker: LurkerFrame | null; // the thing in the attic window
+}
+
+// Each part runs 0..1: rising from below the sill, the eyes lighting up, the
+// knife arm going up, and leaving to the left (down the stairs).
+export interface LurkerFrame {
+  rise: number;
+  eyes: number;
+  knife: number;
+  exit: number;
 }
 
 // Features of the drawn house.
 export const DOOR = { x: 231.5, left: 226, top: 272, width: 11, height: 20 };
 export const WINDOW = { x: 206, y: 248, width: 11, height: 14 }; // upstairs, nearest the door
+export const ATTIC = { x: 216, y: 214, width: 9, height: 10 }; // the small window under the roof peak
 
 // Beats of the story, in seconds.
 export const STORY = {
@@ -41,7 +54,9 @@ export const STORY = {
   lookRightAt: 10.9,
   runOutFrom: 12.1,
   runOutEnd: 14.6,
-  loop: 24,
+  lurkFrom: 15.4,
+  lurkTo: 21.4,
+  loop: 25,
 } as const;
 
 const START_X = -14;
@@ -99,6 +114,15 @@ function running(t: number, from: number, to: number, x0: number, x1: number): F
   };
 }
 
+function lurkerAt(p: number): LurkerFrame {
+  return {
+    rise: easeInOut(progress(p, 0, 0.3)), // slowly: about two seconds
+    eyes: progress(p, 0.32, 0.4),
+    knife: easeInOut(progress(p, 0.42, 0.52)),
+    exit: easeInOut(progress(p, 0.72, 1)),
+  };
+}
+
 function standing(pose: Pose, facing: 1 | -1): FigureFrame {
   return { x: DOOR.x, y: groundY(DOOR.x), facing, pose, stride: 0 };
 }
@@ -107,7 +131,7 @@ export function storyAt(seconds: number): StoryFrame {
   const s = STORY;
   const wrapped = seconds % s.loop;
   const t = wrapped < 0 ? wrapped + s.loop : wrapped;
-  const rest: StoryFrame = { figure: null, door: 1, peek: null };
+  const rest: StoryFrame = { figure: null, door: 1, peek: null, lurker: null };
 
   // Runs in and steps through the doorway.
   if (t < s.runInEnd) return { ...rest, figure: running(t, 0, s.runInEnd, START_X, DOOR.x) };
@@ -137,6 +161,9 @@ export function storyAt(seconds: number): StoryFrame {
 
   // Runs out and off-screen.
   if (t <= s.runOutEnd) return { ...rest, figure: running(t, s.runOutFrom, s.runOutEnd, DOOR.x, END_X) };
+
+  // Something rises into the attic window and goes downstairs after him.
+  if (t > s.lurkFrom && t < s.lurkTo) return { ...rest, lurker: lurkerAt(progress(t, s.lurkFrom, s.lurkTo)) };
 
   return rest;
 }
