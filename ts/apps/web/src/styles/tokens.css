@@ -1,0 +1,84 @@
+/* ===========================================================
+   Design tokens — the one place to change how the app looks.
+
+   Two layers:
+   1. Palette: named after what the colour IS  (--color-blood)
+   2. Roles:   named after what it's FOR       (--accent, --text-muted)
+
+   Components should use role tokens. To re-theme, change the
+   palette or point a role at a different palette colour.
+   =========================================================== */
+
+:root {
+  /* ---------- Palette ---------- */
+  --color-blood: #e8473d; /* signature red: title, accents, active */
+  --color-wine: #6e1a2c; /* deep red edge on the calendar */
+  --color-bone: #fef5e4; /* warm off-white for main text */
+  --color-chalk: #f6f6f6; /* neutral off-white for sidebar + calendar */
+  --color-ash: #cfcfcf; /* muted grey text */
+  --color-smoke: #666666; /* inactive icons */
+  --color-gravestone: #424242; /* badges */
+  --color-crypt: #262424; /* page background */
+  --color-void: #000000; /* panels: sidebar, calendar, poster plate */
+
+  /* ---------- Roles: backgrounds ---------- */
+  --bg-page: var(--color-crypt);
+  --bg-panel: var(--color-void);
+  --bg-badge: var(--color-gravestone);
+  --bg-hover: rgba(255, 255, 255, 0.06);
+
+  /* ---------- Roles: text ---------- */
+  --text: var(--color-bone);
+  --text-soft: rgba(254, 245, 228, 0.92); /* long paragraphs */
+  --text-muted: rgba(254, 245, 228, 0.85); /* meta, e.g. "Directed by" */
+  --text-panel: var(--color-chalk); /* text on black panels */
+  --text-panel-muted: var(--color-ash);
+
+  /* ---------- Roles: accents + icons ---------- */
+  --accent: var(--color-blood);
+  --accent-deep: var(--color-wine);
+  --icon-inactive: var(--color-smoke);
+
+  /* ---------- Roles: borders + shadows ---------- */
+  --border-faint: rgba(255, 255, 255, 0.14);
+  --border: rgba(255, 255, 255, 0.6);
+  --border-dark: rgba(0, 0, 0, 0.54);
+  --shadow-soft: 2px 5px 10.6px rgba(0, 0, 0, 0.13);
+  --shadow-inset: inset 0 10px 26px rgba(0, 0, 0, 0.22);
+
+  /* ---------- Fonts ---------- */
+  --font-display: "Bebas Neue", sans-serif;
+  --font-body:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+
+  /* ---------- Text sizes: clamp(min, grows-with-screen, max) ---------- */
+  --size-body: clamp(14px, 1.1vw, 18px);
+  --size-heading: clamp(20px, 2.2vw, 32px);
+  --size-hero: clamp(60px, 6.6vw, 96px); /* the big sidebar title */
+  --line-height-body: 1.55;
+
+  /* ---------- Spacing ---------- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 40px;
+  --space-3xl: 64px;
+  --space-page: clamp(12px, 4vw, 20px); /* page gutters */
+  --space-section: clamp(24px, 6vw, 80px); /* between big blocks */
+
+  /* ---------- Shape ---------- */
+  --radius-sm: 4px;
+
+  /* ---------- Motion ---------- */
+  --speed-fast: 0.15s;
+  --speed-normal: 0.25s;
+
+  /* ---------- Layout ---------- */
+  --width-content: clamp(1100px, 86vw, 1680px);
+  --width-reading: 62ch; /* comfortable paragraph width */
+  --width-sidebar: clamp(340px, 28vw, min(560px, 30vw));
+  --calendar-height: 100px; /* kept in sync at runtime by <Calendar> */
+}

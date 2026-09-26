@@ -1,0 +1,72 @@
+# Everything running locally in containers:
+#   make up     (docker compose up --build --watch)
+#   Site: http://localhost:3000   API: http://localhost:8080   Postgres: localhost:5433
+#
+# `--watch` rebuilds the API when Go code changes and syncs site files into
+# the Vite container for hot reload.
+name: spooky
+
+services:
+  db:
+    image: postgres:17-alpine # same major version as Neon
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: spooky
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d spooky"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build: ./go
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/spooky?sslmode=disable
+      VISITOR_SECRET: dev-only-visitor-secret-0123456789abcdef
+      TURNSTILE_SECRET: 1x0000000000000000000000000000000AA # Cloudflare's always-pass test key
+      SECURE_COOKIES: "false"
+      IMAGES_BASE_URL: /images
+      IMAGES_DIR: /assets
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./assets:/assets:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ./go
+          ignore: ["**/*_test.go"]
+
+  web:
+    build:
+      context: ./ts
+      dockerfile: Dockerfile.dev
+    environment:
+      API_ORIGIN: http://api:8080 # Vite proxies /api and /images here
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    develop:
+      watch:
+        - action: sync
+          path: ./ts/apps/web
+          target: /app/apps/web
+          ignore: ["node_modules/", "dist/"]
+        - action: sync
+          path: ./ts/packages
+          target: /app/packages
+          ignore: ["node_modules/"]
+        - action: rebuild
+          path: ./ts/package-lock.json
+
+volumes:
+  pgdata:

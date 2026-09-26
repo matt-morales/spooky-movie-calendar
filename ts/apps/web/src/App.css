@@ -1,0 +1,48 @@
+/* ===========================
+   App.css — page layout only.
+   Colours, fonts and spacing live in styles/tokens.css.
+   =========================== */
+
+.app {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--bg-page);
+  /* 0 top so the calendar sits flush */
+  padding: 0 var(--space-page) var(--space-3xl);
+}
+
+.content-inner {
+  max-width: var(--width-content);
+  margin: 0 auto;
+}
+
+/* Full-bleed sticky calendar */
+.sticky-cal {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin-inline: calc(-1 * var(--space-page));
+}
+
+/* Anchor scroll target sits just below the sticky calendar */
+.movie-section {
+  margin: 0;
+  scroll-margin-top: calc(var(--calendar-height) + var(--space-sm));
+}
+
+@media (max-width: 900px) {
+  /* Stack sidebar above content */
+  .app {
+    display: block;
+  }
+
+  .content {
+    padding: 0 var(--space-page) 56px;
+  }
+}

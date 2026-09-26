@@ -1,0 +1,52 @@
+/* ===========================================================
+   Global base styles. Values come from tokens.css.
+   =========================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text-soft);
+  font-family: var(--font-body);
+  font-size: var(--size-body);
+  font-weight: 400;
+  line-height: var(--line-height-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+figure {
+  margin: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+h1,
+h2,
+h3,
+.cal-header {
+  margin: 0 0 var(--space-sm) 0;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: var(--size-heading);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}

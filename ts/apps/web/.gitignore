@@ -1,0 +1,8 @@
+# Build output and local env overrides
+dist/
+.env.local
+.env.*.local
+
+# Playwright
+/test-results/
+/playwright-report/

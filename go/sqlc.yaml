@@ -1,0 +1,31 @@
+# sqlc generates type-safe Go from the SQL in queries.sql files.
+# Run `go tool sqlc generate` (or `make generate`) after changing SQL.
+version: "2"
+sql:
+  - engine: postgresql
+    schema: pkg/comment/postgres/migrations
+    queries: pkg/comment/postgres/queries.sql
+    gen:
+      go: &go
+        package: db
+        out: pkg/comment/postgres/internal/db
+        sql_package: pgx/v5
+        emit_pointers_for_null_types: true
+        overrides:
+          - db_type: timestamptz
+            go_type: time.Time
+
+  - engine: postgresql
+    schema: internal/adapter/postgres/migrations
+    queries: internal/adapter/postgres/queries.sql
+    gen:
+      go:
+        <<: *go
+        out: internal/adapter/postgres/internal/db
+        overrides:
+          - db_type: timestamptz
+            go_type: time.Time
+          - db_type: date
+            go_type: time.Time
+          - db_type: jsonb
+            go_type: encoding/json.RawMessage
