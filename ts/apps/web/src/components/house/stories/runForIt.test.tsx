@@ -1,5 +1,11 @@
+import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { ATTIC, DOOR, STORY, groundY, storyAt } from "./houseStory";
+import { HouseScene } from "../HouseScene";
+import { ATTIC, DOOR, WINDOW, groundY } from "../scene";
+import { STORY, frameAt, runForIt } from "./runForIt";
+
+const storyAt = frameAt;
+const scene = (t: number) => render(<HouseScene story={runForIt} frame={storyAt(t)} />).container;
 
 // Times of each beat in the story, in seconds from the start of a loop.
 const { runInEnd, closedAt, peekFrom, peekTo, openAt, lookLeftAt, lookRightAt, runOutFrom, runOutEnd, lurkFrom, lurkTo, loop } =
@@ -101,11 +107,50 @@ describe("storyAt", () => {
   });
 });
 
-describe("groundY", () => {
-  it("follows the drawn ground line", () => {
-    expect(groundY(0)).toBeCloseTo(296, 0);
-    expect(groundY(DOOR.x)).toBeGreaterThan(288);
-    expect(groundY(DOOR.x)).toBeLessThan(292);
-    expect(groundY(400)).toBeCloseTo(286, 0);
+describe("drawing run-for-it", () => {
+  it("draws the stick figure where the story puts it", () => {
+    const figure = scene(1).querySelector("[data-part=figure]")!;
+    expect(figure).not.toBeNull();
+    expect(figure.getAttribute("transform")).toMatch(/^translate\(/);
+  });
+
+  it("mirrors the figure when it faces left", () => {
+    expect(scene(STORY.lookLeftAt + 0.3).querySelector("[data-part=figure]")!.getAttribute("transform")).toContain(
+      "scale(-1",
+    );
+  });
+
+  it("darkens the doorway when the door is shut", () => {
+    expect(scene(STORY.closedAt).querySelector("[data-part=door-light]")).toHaveAttribute("width", "0");
+  });
+
+  it("moves the head into the left pane, then the right pane, as it looks out", () => {
+    const head = (t: number) => Number(scene(t).querySelector("[data-part=peek] circle")!.getAttribute("cx"));
+    const centre = WINDOW.x + WINDOW.width / 2; // where the vertical window bar is
+    expect(head(STORY.peekFrom + 1)).toBeLessThan(centre - 2);
+    expect(head(STORY.peekTo - 1)).toBeGreaterThan(centre + 2);
+  });
+
+  describe("the figure in the attic", () => {
+    const lurking = (p: number) => scene(STORY.lurkFrom + (STORY.lurkTo - STORY.lurkFrom) * p);
+
+    it("is only visible through the attic window", () => {
+      const lurker = lurking(0.5).querySelector("[data-part=lurker]")!;
+      expect(lurker.getAttribute("clip-path")).toBe("url(#sb-attic)");
+      expect(ATTIC.width).toBeGreaterThan(0);
+    });
+
+    it("has glowing red eyes once it has risen", () => {
+      expect(lurking(0.01).querySelector("[data-part=lurker-eyes]")).toHaveAttribute("opacity", "0");
+      expect(lurking(0.6).querySelector("[data-part=lurker-eyes]")).toHaveAttribute("opacity", "1");
+    });
+
+    it("raises a knife above its head", () => {
+      const tipY = (p: number) => {
+        const d = lurking(p).querySelector("[data-part=knife]")!.getAttribute("d")!;
+        return [...d.matchAll(/-?\d+(\.\d+)?/g)].map((m) => Number(m[0]))[3]!;
+      };
+      expect(tipY(0.6)).toBeLessThan(tipY(0.01) - 4);
+    });
   });
 });
