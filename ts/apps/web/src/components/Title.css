@@ -1,6 +1,8 @@
 .sidebar .title {
   font-family: var(--font-display);
-  font-size: var(--size-hero);
+  /* The two longest lines ("31 NIGHTS OF", "HALL◉WEEN") are ~4.35em wide,
+     so this fills the sidebar without wrapping. */
+  font-size: min(var(--size-hero), calc(100cqi / 4.5));
 
   font-weight: 400;
   line-height: 0.95;
@@ -26,37 +28,47 @@
   transform-origin: center;
 }
 
-/* Replacement O */
+/* Replacement O: the eye */
 .title-o {
-  position: relative;
   display: inline-block;
-  width: 0.78em; /* slightly wider for breathing room */
-  aspect-ratio: 1 / 1;
-  transform-origin: center;
-  vertical-align: -0.05em; /* nudge baseline so it aligns with letters */
-  overflow: visible; /* ensure the ring stroke isn’t clipped */
+  width: 0.9em;
+  margin: 0 0.02em;
+  vertical-align: baseline;
 }
 
-.title-o-ring {
-  width: 100%;
-  height: 100%;
+.eye {
   display: block;
-  overflow: visible; /* extra safety */
-}
-
-.title-o-ring ellipse {
-  fill: var(--bg-panel);
-  stroke: var(--accent);
-}
-
-.o-core {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-}
-
-.o-core svg {
-  width: 60%; /* tweak down slightly so it doesn’t crowd edges */
+  width: 100%;
   height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 0 0.06em rgba(232, 71, 61, 0.55));
+}
+
+.eye-iris {
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.eye.look-right .eye-iris {
+  transform: translateX(16px);
+}
+
+.eye.look-left .eye-iris {
+  transform: translateX(-16px);
+}
+
+/* Eyelids rest outside the eye (clipped) and meet in the middle to blink. */
+.eye-lid {
+  transition: transform 0.09s ease-in-out;
+}
+
+.eye-lid-top {
+  transform: translateY(-46px);
+}
+
+.eye-lid-bottom {
+  transform: translateY(46px);
+}
+
+.eye.blink .eye-lid {
+  transform: none;
 }

@@ -14,7 +14,8 @@ export type AppEvent =
   | { type: "calendar/toggled" }
   | { type: "ratings/submitted"; movieId: string; value: number }
   | { type: "ratings/saved"; movieId: string; summary: Summary }
-  | { type: "ratings/failed"; movieId: string; previous: number | null; error: string };
+  | { type: "ratings/failed"; movieId: string; previous: number | null; error: string }
+  | { type: "watched/toggled"; movieId: string };
 
 export const moviesLoaded = (year: number, movies: Movie[]): AppEvent => ({ type: "movies/loaded", year, movies });
 export const moviesFailed = (error: string): AppEvent => ({ type: "movies/failed", error });
@@ -38,3 +39,5 @@ export const ratingFailed = (movieId: string, previous: number | null, error: st
   previous,
   error,
 });
+
+export const watchedToggled = (movieId: string): AppEvent => ({ type: "watched/toggled", movieId });

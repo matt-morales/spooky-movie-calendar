@@ -1,0 +1,245 @@
+/* ===========================
+   MovieTile.css
+   date | poster | details + actions | backdrop
+   =========================== */
+
+.tile {
+  display: grid;
+  grid-template-columns: auto clamp(130px, 11vw, 190px) minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-areas: "date poster info backdrop";
+  column-gap: clamp(20px, 2.2vw, 36px);
+  align-items: start;
+}
+
+/* ---------------- Date ---------------- */
+.tile-date {
+  grid-area: date;
+  position: relative;
+  padding: 6px clamp(16px, 1.6vw, 26px) 0 4px;
+  font-family: var(--font-display);
+  color: var(--accent);
+  text-align: center;
+}
+
+/* The red rule beside the date */
+.tile-date::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 8px;
+  width: 2px;
+  height: clamp(90px, 9vw, 130px);
+  background: var(--accent);
+  border-radius: 1px;
+}
+
+.tile-month,
+.tile-day {
+  display: block;
+  line-height: 1;
+}
+
+.tile-month {
+  font-size: clamp(20px, 1.6vw, 26px);
+  letter-spacing: 0.14em;
+}
+
+.tile-day {
+  font-size: clamp(52px, 4.4vw, 72px);
+  letter-spacing: 0.02em;
+}
+
+/* ---------------- Poster ---------------- */
+.tile-poster {
+  grid-area: poster;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------------- Details ---------------- */
+.tile-info {
+  grid-area: info;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+  padding-top: 4px;
+}
+
+.tile-title {
+  margin: 0;
+  font-size: clamp(28px, 2.3vw, 40px);
+  line-height: 1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.tile-title-btn {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: color var(--speed-fast) ease;
+}
+
+.tile-title-btn:hover {
+  color: var(--accent);
+}
+
+.tile-title-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.tile-meta {
+  margin: 6px 0 0;
+  font-size: 0.9em;
+  color: var(--text-faint);
+}
+
+.tile-meta span + span::before {
+  content: "·";
+  margin: 0 0.6em;
+}
+
+.tile-desc {
+  margin: 0;
+  max-width: var(--width-reading);
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+/* ---------------- Actions ----------------
+   They wrap inside the details column, so they can never run over the
+   backdrop image beside it. */
+.tile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.tile-score {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-right: var(--space-sm);
+  font-size: 1.15em;
+  color: var(--text);
+}
+
+.tile-score strong {
+  font-weight: 600;
+}
+
+.tile-score-drop {
+  width: 14px;
+  height: 22px;
+  fill: var(--accent);
+}
+
+.tile-score-count {
+  font-size: 0.8em;
+  color: var(--text-faint);
+}
+
+/* ---------------- Backdrop ----------------
+   Until movies have their own film stills, a close crop of the poster art
+   fades in from the card. */
+.tile-backdrop {
+  grid-area: backdrop;
+  align-self: stretch;
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+}
+
+.tile-backdrop img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  transform: scale(1.5);
+  transform-origin: 50% 30%; /* keep the poster's lettering out of frame */
+  filter: brightness(0.62) saturate(0.9);
+}
+
+.tile-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, var(--bg-card) 0%, transparent 38%),
+    radial-gradient(120% 90% at 60% 45%, transparent 45%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 1280px) {
+  .tile {
+    grid-template-columns: auto clamp(130px, 16vw, 190px) minmax(0, 1fr);
+    grid-template-areas: "date poster info";
+  }
+
+  .tile-backdrop {
+    display: none;
+  }
+}
+
+/* Phones: date, poster and title on one row; the rest full width below. */
+@media (max-width: 700px) {
+  .tile {
+    grid-template-columns: auto 96px minmax(0, 1fr);
+    grid-template-areas:
+      "date poster head"
+      "desc desc desc"
+      "actions actions actions";
+    column-gap: var(--space-lg);
+    row-gap: var(--space-lg);
+  }
+
+  .tile-info {
+    display: contents;
+  }
+
+  .tile-head {
+    grid-area: head;
+    align-self: center;
+  }
+
+  .tile-desc {
+    grid-area: desc;
+  }
+
+  .tile-actions {
+    grid-area: actions;
+    margin-top: 0;
+  }
+
+  .tile-actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .tile-score {
+    flex-basis: 100%;
+  }
+
+  .tile-date::after {
+    height: 70px;
+  }
+}

@@ -1,7 +1,7 @@
 import type { CommentClient } from "@spooky/comment";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import type { Analytics } from "./lib/analytics";
 import type { Api, Movie } from "./lib/api";
@@ -41,8 +41,18 @@ function setup(api: Partial<Api> = {}) {
     } satisfies Analytics,
     comments: {
       thread: vi.fn(async () => ({ comments: [], nextBefore: 0 })),
-      post: vi.fn(),
-      remove: vi.fn(),
+      post: vi.fn(async (_key, input) => ({
+        id: 7,
+        parentId: 0,
+        depth: 0,
+        authorName: input.authorName,
+        body: input.body,
+        status: "visible" as const,
+        mine: true,
+        createdAt: "2025-10-01T21:00:00Z",
+        replies: [],
+      })),
+      remove: vi.fn(async () => undefined),
     } satisfies CommentClient,
   };
   render(
@@ -53,17 +63,28 @@ function setup(api: Partial<Api> = {}) {
   return { ...services, calls };
 }
 
+// Open and close the flipped card instantly; the animation needs a real browser.
+beforeEach(() => {
+  localStorage.clear();
+  vi.spyOn(window, "matchMedia").mockImplementation(
+    (query: string) => ({ matches: query.includes("reduce"), media: query, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList,
+  );
+});
+
+const cardFor = async (title: string) => (await screen.findByRole("heading", { name: title })).closest("article")!;
+
 describe("App", () => {
   it("records the page view first, then loads the lineup", async () => {
     const { api, calls } = setup();
 
-    expect(await screen.findByRole("heading", { name: "Christine" })).toBeInTheDocument();
+    const card = await cardFor("Christine");
     expect(calls).toEqual(["page_view", "movies"]);
     expect(api.movies).toHaveBeenCalledWith(2025);
-    expect(screen.getByText("October 1st")).toBeInTheDocument();
-    expect(screen.getByText("Directed by John Carpenter")).toBeInTheDocument();
+    expect(within(card).getByText("October 1st")).toBeInTheDocument();
+    expect(within(card).getByText("John Carpenter")).toBeInTheDocument();
+    expect(within(card).getByText("7/10")).toBeInTheDocument();
+    expect(within(card).getByText("(2 ratings)")).toBeInTheDocument();
     expect(screen.getByText("October 2025")).toBeInTheDocument();
-    expect(screen.getByText("Average rating: 3.5 (2)")).toBeInTheDocument();
   });
 
   it("builds the calendar from the lineup", async () => {
@@ -82,17 +103,6 @@ describe("App", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(/couldn't load/i);
   });
 
-  it("rates a movie and shows the new average", async () => {
-    const user = userEvent.setup();
-    const { api } = setup();
-    const card = (await screen.findByRole("heading", { name: "Christine" })).closest("article")!;
-
-    await user.click(within(card).getByRole("button", { name: "Rate 5 drops" }));
-
-    expect(api.rate).toHaveBeenCalledWith("2025-01", 10);
-    expect(await within(card).findByText("Average rating: 4.0 (3)")).toBeInTheDocument();
-  });
-
   it("tracks calendar navigation", async () => {
     const user = userEvent.setup();
     const { analytics } = setup();
@@ -103,15 +113,97 @@ describe("App", () => {
     expect(analytics.track).toHaveBeenCalledWith("day_selected", { day: 2 });
   });
 
-  it("opens a movie's comments on demand", async () => {
+  it("marks a movie as watched, on the card and in the calendar", async () => {
+    const user = userEvent.setup();
+    setup();
+    const card = await cardFor("Christine");
+
+    await user.click(within(card).getByRole("button", { name: "Mark as watched" }));
+
+    expect(within(card).getByRole("button", { name: "Watched" })).toHaveAttribute("aria-pressed", "true");
+    const calendar = screen.getByRole("group", { name: "Choose a night" });
+    expect(within(calendar).getByRole("button", { name: "1, watched" })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem("watched_movies")!)).toEqual(["2025-01"]);
+  });
+
+  it("rates and reviews a movie from the review modal", async () => {
+    const user = userEvent.setup();
+    const { api, comments } = setup();
+    const card = await cardFor("Christine");
+
+    await user.click(within(card).getByRole("button", { name: "Add your review" }));
+    const modal = screen.getByRole("dialog", { name: "Review Christine" });
+
+    await user.click(within(modal).getByRole("button", { name: "Rate 5 drops" }));
+    expect(api.rate).toHaveBeenCalledWith("2025-01", 10);
+    expect(await within(card).findByText("8/10")).toBeInTheDocument();
+
+    await user.type(within(modal).getByLabelText("Your name (optional)"), "Arnie");
+    await user.type(within(modal).getByLabelText("Your review"), "Never trust a Plymouth Fury.");
+    await user.click(within(modal).getByRole("button", { name: "Post review" }));
+
+    expect(comments.post).toHaveBeenCalledWith("movie:2025-01", {
+      body: "Never trust a Plymouth Fury.",
+      authorName: "Arnie",
+      parentId: 0,
+      turnstileToken: "",
+    });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("closes the review modal with Escape", async () => {
+    const user = userEvent.setup();
+    setup();
+    await user.click(within(await cardFor("Christine")).getByRole("button", { name: "Add your review" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("turns a card over to show its reviews when clicked", async () => {
     const user = userEvent.setup();
     const { comments } = setup();
-    const card = (await screen.findByRole("heading", { name: "Christine" })).closest("article")!;
+    vi.mocked(comments.thread).mockResolvedValue({
+      comments: [
+        {
+          id: 3,
+          parentId: 0,
+          depth: 0,
+          authorName: "Leigh",
+          body: "Scared of my own car now.",
+          status: "visible",
+          mine: false,
+          createdAt: "2025-10-01T21:00:00Z",
+          replies: [],
+        },
+      ],
+      nextBefore: 0,
+    });
+    const card = await cardFor("Christine");
     expect(comments.thread).not.toHaveBeenCalled();
 
-    await user.click(within(card).getByRole("button", { name: /comments/i }));
+    await user.click(within(card).getByText("Christine description"));
 
-    await waitFor(() => expect(comments.thread).toHaveBeenCalledWith("movie:2025-01", 0));
-    expect(within(card).getByLabelText("Add a comment")).toBeInTheDocument();
+    const detail = screen.getByRole("dialog", { name: "Christine" });
+    expect(comments.thread).toHaveBeenCalledWith("movie:2025-01", 0);
+    const review = await within(detail).findByRole("article", { name: "Comment by Leigh" });
+    expect(review).toHaveTextContent("Scared of my own car now.");
+    expect(within(review).queryByRole("button", { name: "Reply" })).not.toBeInTheDocument(); // reviews are flat
+
+    await user.click(within(detail).getByRole("button", { name: "Close reviews" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("doesn't turn the card over for its own buttons", async () => {
+    const user = userEvent.setup();
+    const { comments } = setup();
+    const card = await cardFor("Christine");
+
+    await user.click(within(card).getByRole("button", { name: "Mark as watched" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(comments.thread).not.toHaveBeenCalled();
   });
 });

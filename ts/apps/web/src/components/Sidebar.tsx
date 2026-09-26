@@ -1,4 +1,4 @@
-// components/Sidebar.js
+import HauntedHouse from "./HauntedHouse";
 import Title from "./Title";
 import "./Sidebar.css";
 
@@ -28,16 +28,16 @@ export default function Sidebar() {
 
       <div className="sb-intro">
         <h3 className="sb-kicker">
-          One fright a day. Let’s watch, review, and scream together.
+          One fright per night. <br />
+          Let’s watch, review, <br />
+          and scream together.
         </h3>
 
         <p className="sb-body">
-          Scroll down for one great fright per day. Each date unlocks a horror
-          movie you can watch, rate, and review — then join the community by
-          adding your own comment.
+          Spooktober’s more enjoyable together. Each date is a movie, a chance to get lost in the eerie, the iconic,
+          and the unforgettable. Leave a review, track your watch history, and join the community by adding your own
+          comment.
         </p>
-
-        <hr className="sb-rule" />
 
         <ul className="sb-links">
           <li>
@@ -47,17 +47,15 @@ export default function Sidebar() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <img
-                src="/icons/letterboxd.png"
-                alt=""
-                className="sb-link-icon"
-                aria-hidden="true"
-              />
+              <img src="/icons/letterboxd.png" alt="" className="sb-link-icon" aria-hidden="true" />
               <span className="sb-link-text">Letterboxd</span>
             </a>
           </li>
         </ul>
       </div>
+
+      <HauntedHouse />
     </aside>
   );
 }
+

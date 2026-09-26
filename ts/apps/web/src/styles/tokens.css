@@ -18,12 +18,17 @@
   --color-ash: #cfcfcf; /* muted grey text */
   --color-smoke: #666666; /* inactive icons */
   --color-gravestone: #424242; /* badges */
-  --color-crypt: #262424; /* page background */
+  --color-crypt: #161414; /* page background */
+  --color-coffin: #1e1c1c; /* movie cards, modals */
+  --color-ember: #d9824b; /* "watched" dots */
   --color-void: #000000; /* panels: sidebar, calendar, poster plate */
 
   /* ---------- Roles: backgrounds ---------- */
   --bg-page: var(--color-crypt);
   --bg-panel: var(--color-void);
+  --bg-card: var(--color-coffin);
+  --bg-control: rgba(255, 255, 255, 0.03); /* buttons + calendar tiles */
+  --bg-scrim: rgba(6, 4, 4, 0.72); /* behind modals */
   --bg-badge: var(--color-gravestone);
   --bg-hover: rgba(255, 255, 255, 0.06);
 
@@ -33,18 +38,26 @@
   --text-muted: rgba(254, 245, 228, 0.85); /* meta, e.g. "Directed by" */
   --text-panel: var(--color-chalk); /* text on black panels */
   --text-panel-muted: var(--color-ash);
+  --text-faint: rgba(254, 245, 228, 0.6); /* secondary meta, e.g. "· 1983" */
+  --text-on-accent: #ffffff;
 
   /* ---------- Roles: accents + icons ---------- */
   --accent: var(--color-blood);
   --accent-deep: var(--color-wine);
+  --accent-soft: rgba(232, 71, 61, 0.14); /* tinted fills */
   --icon-inactive: var(--color-smoke);
+  --watched: var(--color-ember);
 
   /* ---------- Roles: borders + shadows ---------- */
+  --border-subtle: rgba(255, 255, 255, 0.07); /* card edges */
   --border-faint: rgba(255, 255, 255, 0.14);
+  --border-control: rgba(255, 255, 255, 0.24); /* outlined buttons */
   --border: rgba(255, 255, 255, 0.6);
   --border-dark: rgba(0, 0, 0, 0.54);
   --shadow-soft: 2px 5px 10.6px rgba(0, 0, 0, 0.13);
   --shadow-inset: inset 0 10px 26px rgba(0, 0, 0, 0.22);
+  --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.35);
+  --shadow-modal: 0 30px 80px rgba(0, 0, 0, 0.7);
 
   /* ---------- Fonts ---------- */
   --font-display: "Bebas Neue", sans-serif;
@@ -55,7 +68,7 @@
   /* ---------- Text sizes: clamp(min, grows-with-screen, max) ---------- */
   --size-body: clamp(14px, 1.1vw, 18px);
   --size-heading: clamp(20px, 2.2vw, 32px);
-  --size-hero: clamp(60px, 6.6vw, 96px); /* the big sidebar title */
+  --size-hero: 120px; /* the big sidebar title, at most; it scales to fit the sidebar */
   --line-height-body: 1.55;
 
   /* ---------- Spacing ---------- */
@@ -71,10 +84,14 @@
 
   /* ---------- Shape ---------- */
   --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 
   /* ---------- Motion ---------- */
   --speed-fast: 0.15s;
   --speed-normal: 0.25s;
+  --speed-flip: 0.55s; /* a movie card turning over (MovieDetail.tsx matches) */
+  --speed-expand: 0.45s; /* …then stretching into the reviews view */
 
   /* ---------- Layout ---------- */
   --width-content: clamp(1100px, 86vw, 1680px);

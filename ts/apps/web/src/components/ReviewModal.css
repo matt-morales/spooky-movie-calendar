@@ -1,0 +1,107 @@
+.review-close {
+  position: absolute;
+  top: var(--space-lg);
+  right: var(--space-lg);
+}
+
+.review-head {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
+  padding-right: 44px; /* room for the close button */
+  margin-bottom: var(--space-xl);
+}
+
+.review-poster {
+  width: 64px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+.review-kicker {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1em;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+}
+
+.review-title {
+  margin: 0;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.05;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.review-meta {
+  margin: 4px 0 0;
+  font-size: 0.875em;
+  color: var(--text-faint);
+}
+
+.review-rating {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-lg);
+  background: var(--bg-control);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.review-label,
+.review-modal .cmt-label {
+  font-family: var(--font-display);
+  font-size: 1.05em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* The comment package's form, dressed to match the app */
+.review-modal .cmt-form {
+  gap: var(--space-sm);
+}
+
+.review-modal .cmt-label {
+  margin-top: var(--space-sm);
+}
+
+.review-modal .cmt-input,
+.review-modal .cmt-textarea {
+  padding: 10px var(--space-md);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-faint);
+  border-radius: var(--radius-md);
+  transition: border-color var(--speed-fast) ease;
+}
+
+.review-modal .cmt-textarea {
+  min-height: 8em;
+}
+
+.review-modal .cmt-input:focus-visible,
+.review-modal .cmt-textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.review-modal .cmt-actions {
+  margin-top: var(--space-md);
+}
+
+.review-modal .cmt-button {
+  min-height: 38px;
+  padding: 0 var(--space-xl);
+  font-size: 0.875em;
+}
+
+.review-modal .cmt-button--quiet {
+  border-color: var(--border-control);
+}

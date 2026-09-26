@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
+import { useEffect, useId, useState } from "react";
+import { prefersReducedMotion } from "../lib/dialog";
 import "./Title.css";
 
 export default function Title() {
   return (
     <h1 className="title">
       <span className="title-number">3</span>
-      <span className="title-tilt">1</span> <br />
-      NIGHTS OF <br />
+      <span className="title-tilt">1</span> NIGHTS OF <br />
       HALL
       <EyeO />
       WEEN <br />
@@ -15,106 +15,68 @@ export default function Title() {
   );
 }
 
+// The eye looks around, then blinks: [state, how long to hold it (ms)].
+const LOOKS = [
+  ["look-center", 2000],
+  ["look-right", 500],
+  ["look-left", 700],
+  ["blink", 200],
+] as const;
+
+// The "O" in HALLOWEEN: a red eye whose pupil wanders and blinks.
 function EyeO() {
-  const states = [
-    // Centered
-    <svg viewBox="0 0 24 24" fill="none">
-      <path
-        d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
-        fill="white"
-        stroke="white"
-        strokeWidth="2"
-      />
-    </svg>,
-
-    // Right
-    <svg viewBox="0 0 24 24" fill="none">
-      <path
-        d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M14 15C15.6569 15 17 13.6569 17 12C17 10.3431 15.6569 9 14 9C12.3431 9 11 10.3431 11 12C11 13.6569 12.3431 15 14 15Z"
-        fill="white"
-        stroke="white"
-        strokeWidth="2"
-      />
-    </svg>,
-
-    // Left
-    <svg viewBox="0 0 24 24" fill="none">
-      <path
-        d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9 15C10.6569 15 12 13.6569 12 12C12 10.3431 10.6569 9 9 9C7.34315 9 6 10.3431 6 12C6 13.6569 7.34315 15 9 15Z"
-        fill="white"
-        stroke="white"
-        strokeWidth="2"
-      />
-    </svg>,
-
-    // Closed
-    <svg viewBox="0 0 24 24" fill="none">
-      <path
-        d="M1 11C1 11 5 9 12 9C19 9 23 11 23 11C23 11 19 13 12 13C5 13 1 11 1 11Z"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>,
-  ];
-
-  // Per-state durations (ms)
-  const durations = [2000, 500, 700, 200];
-
   const [index, setIndex] = useState(0);
+  const id = useId();
+  const lens = "M2 42C18-6 82-6 98 42 82 90 18 90 2 42Z";
 
   useEffect(() => {
-    // Respect reduced motion: keep centered if user prefers no animation
-    const reduce = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (reduce) return;
-
-    const t = setTimeout(() => {
-      setIndex((p) => (p + 1) % states.length);
-    }, durations[index]);
-
+    // Respect reduced motion: keep the eye still, looking straight ahead.
+    if (prefersReducedMotion()) return;
+    const t = setTimeout(() => setIndex((i) => (i + 1) % LOOKS.length), LOOKS[index]![1]);
     return () => clearTimeout(t);
-  }, [index]); // re-run for each state
+  }, [index]);
 
   return (
-    <span className="title-o">
-      <svg
-        className="title-o-ring"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="xMidYMid meet"
-      >
-        <ellipse
-          cx="50"
-          cy="50"
-          rx="48"
-          ry="50"
-          strokeWidth="8"
-        />
+    <span className="title-o" aria-hidden="true">
+      <svg className={`eye ${LOOKS[index]![0]}`} viewBox="0 5 100 74">
+        <defs>
+          <radialGradient id={`${id}-flesh`} cx="50%" cy="45%" r="60%">
+            <stop offset="0" stopColor="#ff6a5c" />
+            <stop offset="0.55" style={{ stopColor: "var(--accent)" }} />
+            <stop offset="1" stopColor="#7d1420" />
+          </radialGradient>
+          <linearGradient id={`${id}-lid`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#5e0d17" />
+            <stop offset="1" stopColor="#c7352d" />
+          </linearGradient>
+          <radialGradient id={`${id}-shade`} cx="50%" cy="55%" r="55%">
+            <stop offset="0.6" stopColor="#000" stopOpacity="0" />
+            <stop offset="1" stopColor="#000" stopOpacity="0.55" />
+          </radialGradient>
+          <clipPath id={`${id}-clip`}>
+            <path d={lens} />
+          </clipPath>
+        </defs>
+
+        <path d={lens} fill={`url(#${id}-flesh)`} />
+        <g clipPath={`url(#${id}-clip)`}>
+          <g className="eye-iris">
+            <circle cx="50" cy="42" r="25" fill="#170506" />
+            <circle cx="50" cy="42" r="18" style={{ fill: "var(--color-bone)" }} />
+            <circle cx="50" cy="42" r="9.5" fill="#050505" />
+            <circle cx="46" cy="38" r="3" fill="#fff" />
+          </g>
+          <rect width="100" height="84" fill={`url(#${id}-shade)`} />
+          <g className="eye-lid eye-lid-top">
+            <rect x="0" y="-2" width="100" height="44" fill={`url(#${id}-lid)`} />
+            <path d="M0 42H100" stroke="#3a060c" strokeWidth="3" />
+          </g>
+          <g className="eye-lid eye-lid-bottom">
+            <rect x="0" y="42" width="100" height="44" fill="#9e2229" />
+          </g>
+        </g>
+        <path d={lens} fill="none" stroke="#3a060c" strokeWidth="3" strokeLinejoin="round" />
       </svg>
-      <span className="o-core">{states[index]}</span>
     </span>
   );
 }

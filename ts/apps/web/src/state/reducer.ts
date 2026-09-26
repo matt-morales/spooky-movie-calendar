@@ -12,6 +12,7 @@ export interface AppState {
   movies: { status: "loading" | "ready" | "failed"; year: number | null; items: Movie[]; error: string | null };
   calendar: { selectedDay: number; collapsed: boolean };
   ratings: Record<string, RatingState>;
+  watched: string[]; // movie IDs this visitor has marked as watched
 }
 
 const EMPTY_RATING: RatingState = { mine: null, summary: null, saving: false, error: null };
@@ -23,11 +24,12 @@ export function dayFromHash(hash: string): number {
   return d >= 1 && d <= 31 ? d : 1;
 }
 
-export function createInitialState(hash = ""): AppState {
+export function createInitialState(hash = "", watched: string[] = []): AppState {
   return {
     movies: { status: "loading", year: null, items: [], error: null },
     calendar: { selectedDay: dayFromHash(hash), collapsed: false },
     ratings: {},
+    watched,
   };
 }
 
@@ -73,8 +75,20 @@ export function reducer(state: AppState, event: AppEvent): AppState {
     // Roll back to the rating we had before the failed save.
     case "ratings/failed":
       return updateRating(state, event.movieId, { mine: event.previous, saving: false, error: event.error });
+
+    case "watched/toggled": {
+      const { watched } = state;
+      return {
+        ...state,
+        watched: watched.includes(event.movieId)
+          ? watched.filter((id) => id !== event.movieId)
+          : [...watched, event.movieId],
+      };
+    }
   }
 }
 
 export const selectRating = (state: AppState, movieId: string): RatingState =>
   state.ratings[movieId] ?? EMPTY_RATING;
+
+export const isWatched = (state: AppState, movieId: string): boolean => state.watched.includes(movieId);

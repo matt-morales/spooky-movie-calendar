@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { averageDrops, monthLabel, nightLabel } from "./format";
+import { averageDrops, calendarDate, letterboxdLink, localIsoDate, monthLabel, nightLabel, outOfTen } from "./format";
 
 describe("nightLabel", () => {
   it.each([
@@ -33,5 +33,37 @@ describe("averageDrops", () => {
     expect(averageDrops(7)).toBe("3.5");
     expect(averageDrops(8)).toBe("4.0");
     expect(averageDrops(6.666)).toBe("3.3");
+  });
+});
+
+describe("calendarDate", () => {
+  it("splits a date into a short month and a two-digit day", () => {
+    expect(calendarDate("2025-10-01")).toEqual({ month: "Oct", day: "01" });
+    expect(calendarDate("2025-10-31")).toEqual({ month: "Oct", day: "31" });
+  });
+});
+
+describe("outOfTen", () => {
+  it("drops a trailing .0", () => {
+    expect(outOfTen(8)).toBe("8");
+    expect(outOfTen(7.25)).toBe("7.3");
+    expect(outOfTen(6.666)).toBe("6.7");
+  });
+});
+
+describe("localIsoDate", () => {
+  it("formats the local calendar day", () => {
+    expect(localIsoDate(new Date(2025, 9, 7, 23, 30))).toBe("2025-10-07");
+  });
+});
+
+describe("letterboxdLink", () => {
+  it("prefers the film's own page", () => {
+    expect(letterboxdLink({ title: "Christine", letterboxdUrl: "https://letterboxd.com/film/christine/" })).toBe(
+      "https://letterboxd.com/film/christine/",
+    );
+  });
+  it("falls back to a search", () => {
+    expect(letterboxdLink({ title: "The Grudge" })).toBe("https://letterboxd.com/search/films/The%20Grudge/");
   });
 });

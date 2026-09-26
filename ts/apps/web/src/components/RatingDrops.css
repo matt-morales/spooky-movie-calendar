@@ -1,0 +1,36 @@
+.drops {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.drop-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-xs);
+  line-height: 0;
+  border-radius: var(--radius-sm);
+}
+
+.drop-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.blood-drop {
+  width: 18px;
+  height: 28px;
+  fill: var(--icon-inactive);
+  transition:
+    fill var(--speed-normal) ease,
+    transform 0.2s ease;
+}
+
+.drop-btn.active .blood-drop {
+  fill: var(--accent);
+  transform: scale(1.1);
+}
+
+.drop-btn:hover .blood-drop {
+  transform: scale(1.15);
+}

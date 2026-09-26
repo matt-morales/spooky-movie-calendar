@@ -20,6 +20,10 @@
 .content-inner {
   max-width: var(--width-content);
   margin: 0 auto;
+  padding-top: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
 }
 
 /* Full-bleed sticky calendar */

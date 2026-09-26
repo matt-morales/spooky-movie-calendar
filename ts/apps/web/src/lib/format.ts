@@ -32,3 +32,25 @@ export function monthLabel(movies: ReadonlyArray<{ date: string }>): string {
 export function averageDrops(average: number): string {
   return (average / 2).toFixed(1);
 }
+
+/** "2025-10-01" → { month: "Oct", day: "01" } for the card's date column. */
+export function calendarDate(iso: string): { month: string; day: string } {
+  const { month, day } = parts(iso);
+  return { month: month.slice(0, 3), day: String(day).padStart(2, "0") };
+}
+
+/** A 2–10 average as a score out of ten: 8 → "8", 7.25 → "7.3". */
+export function outOfTen(average: number): string {
+  return String(Number(average.toFixed(1)));
+}
+
+/** The visitor's local calendar day, in the same form as Movie.date. */
+export function localIsoDate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** The film's Letterboxd page, or a Letterboxd search until the URL is filled in. */
+export function letterboxdLink(movie: { title: string; letterboxdUrl?: string }): string {
+  return movie.letterboxdUrl || `https://letterboxd.com/search/films/${encodeURIComponent(movie.title)}/`;
+}
