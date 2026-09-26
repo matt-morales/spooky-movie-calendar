@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { CommentApiError, type CommentClient } from "./api";
-import { CommentThread } from "./CommentThread";
+import { CommentList, CommentThread } from "./CommentThread";
 import type { Comment } from "./types";
 
 function comment(over: Partial<Comment>): Comment {
@@ -164,5 +164,42 @@ describe("CommentThread", () => {
     await waitFor(() =>
       expect(client.post).toHaveBeenCalledWith("movie:1", expect.objectContaining({ turnstileToken: "tok-123" })),
     );
+  });
+});
+
+describe("CommentList", () => {
+  const noop = async () => {};
+
+  it("renders a flat list with no reply buttons at depth 1", () => {
+    render(
+      <CommentList
+        comments={[comment({ id: 1, authorName: "Ash", body: "Groovy" })]}
+        status="ready"
+        hasOlder={false}
+        maxDepth={1}
+        onReply={noop}
+        onDelete={noop}
+        onLoadOlder={noop}
+      />,
+    );
+    const item = screen.getByRole("article", { name: /Ash/ });
+    expect(within(item).getByText("Groovy")).toBeInTheDocument();
+    expect(within(item).queryByRole("button", { name: "Reply" })).not.toBeInTheDocument();
+  });
+
+  it("uses the host's wording for empty and paged lists", () => {
+    render(
+      <CommentList
+        comments={[]}
+        status="ready"
+        hasOlder
+        noun="reviews"
+        emptyText="No reviews yet."
+        onDelete={noop}
+        onLoadOlder={noop}
+      />,
+    );
+    expect(screen.getByText("No reviews yet.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Load older reviews" })).toBeInTheDocument();
   });
 });

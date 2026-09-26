@@ -1,7 +1,8 @@
-import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useReducer, type Dispatch, type ReactNode } from "react";
 import type { Analytics } from "../lib/analytics";
 import type { CommentClient } from "@spooky/comment";
 import type { Api } from "../lib/api";
+import { loadWatched, saveWatched } from "../lib/watched";
 import type { AppEvent } from "./events";
 import { createInitialState, reducer, type AppState } from "./reducer";
 
@@ -16,7 +17,8 @@ export interface Services {
 }
 
 export function AppStateProvider({ services, children }: { services: Services; children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, window.location.hash, createInitialState);
+  const [state, dispatch] = useReducer(reducer, null, () => createInitialState(window.location.hash, loadWatched()));
+  useEffect(() => saveWatched(state.watched), [state.watched]);
   return (
     <ServicesContext.Provider value={services}>
       <DispatchContext.Provider value={dispatch}>

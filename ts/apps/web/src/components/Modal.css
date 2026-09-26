@@ -1,0 +1,53 @@
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: var(--space-page);
+  background: var(--bg-scrim);
+  backdrop-filter: blur(3px);
+  animation: modal-fade var(--speed-normal) ease both;
+}
+
+.modal {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 2 * var(--space-page));
+  overflow-y: auto;
+  padding: clamp(20px, 3vw, 32px);
+
+  color: var(--text);
+  background:
+    radial-gradient(120% 50% at 0% 0%, var(--accent-soft), transparent 60%),
+    var(--bg-card);
+  border: 1px solid var(--border-faint);
+  border-top: 3px solid var(--accent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+  animation: modal-rise var(--speed-normal) cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+
+.modal:focus {
+  outline: none;
+}
+
+@keyframes modal-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-scrim,
+  .modal {
+    animation: none;
+  }
+}

@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { createCommentClient, type CommentClient } from "./api";
+import { useState } from "react";
+import type { CommentClient } from "./api";
 import { CommentForm } from "./CommentForm";
-import { addReply, removeComment } from "./tree";
 import type { Comment } from "./types";
+import { useCommentThread, type ThreadStatus } from "./useCommentThread";
 
 export interface CommentThreadProps {
   /** Anything the host app uses to identify a page, e.g. "movie:2025-07". */
@@ -17,87 +17,82 @@ export interface CommentThreadProps {
   onPosted?: (comment: Comment) => void;
 }
 
-export function CommentThread({
-  threadKey,
-  client: givenClient,
-  getVerificationToken,
-  maxDepth = 5,
-  onPosted,
-}: CommentThreadProps) {
-  const client = useMemo(() => givenClient ?? createCommentClient(), [givenClient]);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [nextBefore, setNextBefore] = useState(0);
-  const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
+export function CommentThread({ threadKey, client, getVerificationToken, maxDepth = 5, onPosted }: CommentThreadProps) {
+  const thread = useCommentThread(threadKey, { client, onPosted });
 
-  useEffect(() => {
-    let cancelled = false;
-    setStatus("loading");
-    client
-      .thread(threadKey, 0)
-      .then((page) => {
-        if (cancelled) return;
-        setComments(page.comments);
-        setNextBefore(page.nextBefore);
-        setStatus("ready");
-      })
-      .catch(() => !cancelled && setStatus("failed"));
-    return () => {
-      cancelled = true;
-    };
-  }, [client, threadKey]);
-
-  const post = useCallback(
-    async (body: string, authorName: string, parentId: number) => {
-      const turnstileToken = getVerificationToken ? await getVerificationToken() : "";
-      const created = await client.post(threadKey, { body, authorName, parentId, turnstileToken });
-      setComments((cs) => (parentId ? addReply(cs, parentId, created) : [created, ...cs]));
-      onPosted?.(created);
-    },
-    [client, threadKey, getVerificationToken, onPosted],
-  );
-
-  const remove = useCallback(
-    async (id: number) => {
-      await client.remove(id);
-      setComments((cs) => removeComment(cs, id));
-    },
-    [client],
-  );
-
-  async function loadOlder() {
-    const page = await client.thread(threadKey, nextBefore);
-    setComments((cs) => [...cs, ...page.comments]);
-    setNextBefore(page.nextBefore);
+  async function post(body: string, authorName: string, parentId: number) {
+    const turnstileToken = getVerificationToken ? await getVerificationToken() : "";
+    await thread.post({ body, authorName, parentId, turnstileToken });
   }
 
   return (
     <section className="cmt-thread" aria-label="Comments">
       <CommentForm label="Add a comment" submitLabel="Post" showName onSubmit={(b, n) => post(b, n, 0)} />
+      <CommentList
+        comments={thread.comments}
+        status={thread.status}
+        hasOlder={thread.hasOlder}
+        maxDepth={maxDepth}
+        onReply={post}
+        onDelete={thread.remove}
+        onLoadOlder={thread.loadOlder}
+      />
+    </section>
+  );
+}
 
-      {status === "loading" && <p className="cmt-muted">Loading comments…</p>}
-      {status === "failed" && <p className="cmt-muted">Comments couldn't be loaded.</p>}
+export interface CommentListProps {
+  comments: Comment[];
+  status: ThreadStatus;
+  hasOlder: boolean;
+  /** Must match the server's MaxDepth. 1 gives a flat list with no replies. */
+  maxDepth?: number;
+  onReply?(body: string, authorName: string, parentId: number): Promise<void>;
+  onDelete(id: number): Promise<void>;
+  onLoadOlder(): Promise<void>;
+  /** Shown once loaded when there are no comments. */
+  emptyText?: string;
+  noun?: string; // "comments", "reviews", …
+}
+
+export function CommentList({
+  comments,
+  status,
+  hasOlder,
+  maxDepth = 5,
+  onReply,
+  onDelete,
+  onLoadOlder,
+  emptyText,
+  noun = "comments",
+}: CommentListProps) {
+  return (
+    <>
+      {status === "loading" && <p className="cmt-muted">Loading {noun}…</p>}
+      {status === "failed" && <p className="cmt-muted">{capitalize(noun)} couldn't be loaded.</p>}
+      {status === "ready" && comments.length === 0 && emptyText && <p className="cmt-muted">{emptyText}</p>}
 
       <ol className="cmt-list">
         {comments.map((c) => (
           <li key={c.id}>
-            <CommentItem comment={c} maxDepth={maxDepth} onReply={post} onDelete={remove} />
+            <CommentItem comment={c} maxDepth={onReply ? maxDepth : 0} onReply={onReply} onDelete={onDelete} />
           </li>
         ))}
       </ol>
 
-      {nextBefore > 0 && (
-        <button type="button" className="cmt-button cmt-button--quiet" onClick={loadOlder}>
-          Load older comments
+      {hasOlder && (
+        <button type="button" className="cmt-button cmt-button--quiet" onClick={onLoadOlder}>
+          Load older {noun}
         </button>
       )}
-    </section>
+    </>
   );
 }
 
 interface ItemProps {
   comment: Comment;
   maxDepth: number;
-  onReply(body: string, authorName: string, parentId: number): Promise<void>;
+  onReply?(body: string, authorName: string, parentId: number): Promise<void>;
   onDelete(id: number): Promise<void>;
 }
 
@@ -105,7 +100,7 @@ function CommentItem({ comment: c, maxDepth, onReply, onDelete }: ItemProps) {
   const [replying, setReplying] = useState(false);
   const removed = c.status === "removed";
   const author = removed ? "" : c.authorName || "Anonymous";
-  const canReply = !removed && c.depth + 1 < maxDepth;
+  const canReply = !!onReply && !removed && c.depth + 1 < maxDepth;
 
   return (
     <article className="cmt-item" aria-label={removed ? "Removed comment" : `Comment by ${author}`}>
@@ -133,7 +128,7 @@ function CommentItem({ comment: c, maxDepth, onReply, onDelete }: ItemProps) {
         </>
       )}
 
-      {replying && (
+      {replying && onReply && (
         <CommentForm
           label="Reply"
           submitLabel="Post reply"
@@ -157,6 +152,10 @@ function CommentItem({ comment: c, maxDepth, onReply, onDelete }: ItemProps) {
       )}
     </article>
   );
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function formatWhen(iso: string): string {

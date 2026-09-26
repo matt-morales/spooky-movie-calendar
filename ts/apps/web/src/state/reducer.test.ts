@@ -8,9 +8,10 @@ import {
   ratingFailed,
   ratingSaved,
   ratingSubmitted,
+  watchedToggled,
   type AppEvent,
 } from "./events";
-import { createInitialState, dayFromHash, reducer, selectRating, type AppState } from "./reducer";
+import { createInitialState, dayFromHash, isWatched, reducer, selectRating, type AppState } from "./reducer";
 
 const run = (events: AppEvent[], state: AppState = createInitialState()) => events.reduce(reducer, state);
 
@@ -70,5 +71,16 @@ describe("reducer", () => {
 
   it("unknown movies have an empty rating", () => {
     expect(selectRating(createInitialState(), "x")).toEqual({ mine: null, summary: null, saving: false, error: null });
+  });
+
+  it("toggles a movie as watched", () => {
+    const s1 = run([watchedToggled("2025-01")]);
+    expect(isWatched(s1, "2025-01")).toBe(true);
+    expect(isWatched(s1, "2025-02")).toBe(false);
+    expect(isWatched(reducer(s1, watchedToggled("2025-01")), "2025-01")).toBe(false);
+  });
+
+  it("starts with the watched movies it's given", () => {
+    expect(isWatched(createInitialState("", ["2025-03"]), "2025-03")).toBe(true);
   });
 });

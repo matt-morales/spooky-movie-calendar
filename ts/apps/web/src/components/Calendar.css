@@ -1,20 +1,42 @@
-/* Calendar block */
+/* Calendar block: sticky above the movie cards */
 .cal {
-  background: var(--bg-panel);
-  padding: var(--space-lg) 18px;
-  border-left: 0.8px solid var(--accent-deep);
-  opacity: 0.8;
+  padding: var(--space-xl) var(--space-page) var(--space-lg);
+  background: color-mix(in srgb, var(--bg-page) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.cal-bar {
+  max-width: var(--width-content);
+  margin: 0 auto var(--space-lg);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md) var(--space-xl);
 }
 
 .cal-header {
-  margin: 0 0 var(--space-md);
-  letter-spacing: 1.4px;
-
-  display: flex;
-  justify-content: space-between;
+  display: inline-flex;
   align-items: center;
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(22px, 2vw, 30px);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-panel);
+  background: none;
+  border: 0;
   cursor: pointer;
   user-select: none;
+}
+
+.cal-header:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
 .cal-caret {
@@ -27,18 +49,58 @@
 }
 
 .cal-caret.up {
-  border-bottom: 6px solid var(--text-panel);
+  border-bottom: 6px solid var(--text-faint);
 }
 
 .cal-caret.down {
-  border-top: 6px solid var(--text-panel);
+  border-top: 6px solid var(--text-faint);
 }
 
-/* 7 evenly distributed columns */
+/* ---------------- Legend ---------------- */
+.cal-legend {
+  display: flex;
+  gap: var(--space-xl);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8em;
+  color: var(--text-faint);
+}
+
+.cal-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.cal-legend li::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.cal-legend .is-today::before {
+  background: var(--accent);
+}
+
+.cal-legend .is-watched::before {
+  background: var(--watched);
+}
+
+.cal-legend .is-upcoming::before {
+  border: 1.5px solid var(--text-faint);
+}
+
+/* ---------------- Day tiles ---------------- */
 .cal-grid {
+  max-width: var(--width-content);
+  margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: var(--space-sm);
+  max-height: 400px;
+  overflow: hidden;
   transition:
     max-height var(--speed-normal) ease,
     opacity var(--speed-normal) ease;
@@ -49,19 +111,19 @@
   opacity: 0;
 }
 
-/* Day tile */
 .cal-day {
   position: relative;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+  display: grid;
+  place-items: center;
+  height: 46px;
 
-  padding: var(--space-xs) 6px;
-  min-height: 34px;
-
-  border: 1px solid var(--border);
-  background: transparent;
+  font: inherit;
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
   color: var(--text-panel);
+  background: var(--bg-control);
+  border: 1px solid var(--border-faint);
+  border-radius: var(--radius-sm);
   line-height: 1;
 
   cursor: pointer;
@@ -74,6 +136,7 @@
 
 .cal-day:hover {
   background: var(--bg-hover);
+  border-color: var(--border-control);
 }
 
 .cal-day:active {
@@ -85,17 +148,67 @@
   outline-offset: 2px;
 }
 
-/* Selected day gets a red inner lining */
-.cal-day.is-selected::after {
+.cal-day.is-selected {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border);
+}
+
+.cal-day.is-today {
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Watched: a small dot under the number */
+.cal-day.is-watched::after {
   content: "";
   position: absolute;
-  inset: 1px;
-  border: 2px solid var(--accent);
-  pointer-events: none;
+  bottom: 6px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: var(--watched);
 }
 
 @media (max-width: 640px) {
+  .cal {
+    padding-block: var(--space-md);
+  }
+
+  .cal-bar {
+    margin-bottom: var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .cal-header {
+    letter-spacing: 0.2em;
+  }
+
   .cal-grid {
-    gap: 6px;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+  }
+
+  .cal-day {
+    height: 32px;
+  }
+
+  .cal-day.is-watched::after {
+    bottom: 3px;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+  }
+
+  .cal-legend {
+    gap: var(--space-lg);
+    font-size: 0.75em;
+  }
+
+  .cal-legend li::before {
+    width: 9px;
+    height: 9px;
   }
 }

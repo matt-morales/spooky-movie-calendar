@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 // End-to-end check of the main flows against the real API and database.
 
-test("loads the lineup, rates a movie and opens comments", async ({ page }) => {
+test("loads the lineup, rates a movie and opens its reviews", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
 
@@ -12,11 +12,19 @@ test("loads the lineup, rates a movie and opens comments", async ({ page }) => {
   await expect(page.getByRole("group", { name: "Choose a night" }).getByRole("button")).toHaveCount(31);
 
   const card = page.locator("article.movie-card").filter({ has: page.getByRole("heading", { name: "Christine" }) });
-  await card.getByRole("button", { name: "Rate 4 drops" }).click();
-  await expect(card.getByText(/Average rating: \d\.\d \(\d+\)/)).toBeVisible();
+  await card.getByRole("button", { name: "Add your review" }).click();
+  const modal = page.getByRole("dialog", { name: "Review Christine" });
+  await modal.getByRole("button", { name: "Rate 4 drops" }).click();
+  await expect(modal.getByLabel("Your review")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(card.getByText(/\d+(\.\d)?\/10/)).toBeVisible();
 
-  await card.getByRole("button", { name: "Comments" }).click();
-  await expect(card.getByLabel("Add a comment")).toBeVisible();
+  // Clicking the card turns it over to show its reviews.
+  await card.getByText(/Nerdy high schooler/).click();
+  const detail = page.getByRole("dialog", { name: "Christine" });
+  await expect(detail.getByRole("heading", { name: "Reviews" })).toBeVisible();
+  await detail.getByRole("button", { name: "Close reviews" }).click();
+  await expect(detail).toBeHidden();
 
   expect(errors).toEqual([]);
 });
@@ -28,13 +36,13 @@ test("the calendar jumps to a night", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Friday the 13th: The Final Chapter" })).toBeInViewport();
 });
 
-test("the comments toggle is styled like the rest of the page", async ({ page }) => {
+test("card buttons are styled like the rest of the page", async ({ page }) => {
   await page.goto("/");
-  const toggle = page.locator("article.movie-card").first().getByRole("button", { name: "Comments" });
-  const style = await toggle.evaluate((el) => {
+  const button = page.locator("article.movie-card").first().getByRole("button", { name: "Mark as watched" });
+  const style = await button.evaluate((el) => {
     const s = getComputedStyle(el);
     return { font: s.fontFamily, background: s.backgroundColor };
   });
   expect(style.font).toMatch(/Inter/); // browser-default buttons use a system font
-  expect(style.background).toBe("rgba(0, 0, 0, 0)"); // not the default grey/white fill
+  expect(style.background).not.toBe("rgb(239, 239, 239)"); // not the default grey fill
 });

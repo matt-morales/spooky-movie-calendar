@@ -1,0 +1,142 @@
+/* ===========================
+   MovieDetail.css — the card turned over to show its reviews.
+   Phases (data-phase): start → flipping → expanding → open,
+   then collapsing → unflipping when closed.
+   =========================== */
+
+.detail-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.detail-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-scrim);
+  opacity: 0;
+  transition: opacity var(--speed-flip) ease;
+}
+
+.detail-layer:not([data-phase="start"], [data-phase="unflipping"]) .detail-scrim {
+  opacity: 1;
+}
+
+.flip-card {
+  position: fixed;
+  perspective: 1800px;
+  transition:
+    top var(--speed-expand) cubic-bezier(0.3, 0.7, 0.2, 1),
+    height var(--speed-expand) cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: center;
+  transition: transform var(--speed-flip) cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+/* Top edge swings towards the viewer and down. */
+.detail-layer:not([data-phase="start"], [data-phase="unflipping"]) .flip-inner {
+  transform: rotateX(-180deg);
+}
+
+.flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+}
+
+/* (Doubled class: must beat .surface's padding, which loads later.) */
+.flip-face.flip-back {
+  transform: rotateX(180deg);
+  padding: 0;
+  box-shadow: var(--shadow-modal);
+}
+
+.flip-scroll {
+  height: 100%;
+  overflow: hidden;
+  padding: var(--card-pad);
+}
+
+.flip-back:focus {
+  outline: none;
+}
+
+/* Scroll the reviews only once the card has finished stretching. */
+.detail-layer[data-phase="open"] .flip-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.detail-close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  z-index: 1;
+}
+
+/* ---------------- Reviews ---------------- */
+.detail-reviews {
+  margin-top: clamp(24px, 3vw, 36px);
+  padding-top: clamp(20px, 2.5vw, 28px);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.detail-reviews-title {
+  margin: 0;
+  font-size: clamp(24px, 2vw, 30px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detail-reviews .cmt-list {
+  gap: var(--space-md);
+}
+
+.detail-reviews .cmt-list:empty {
+  display: none;
+}
+
+.detail-reviews .cmt-item {
+  padding: var(--space-lg) var(--space-lg) var(--space-md);
+  background: var(--bg-control);
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius-md);
+}
+
+.detail-reviews .cmt-author {
+  color: var(--text);
+}
+
+.detail-reviews .cmt-body {
+  margin: var(--space-sm) 0 0;
+  color: var(--text-muted);
+  max-width: 80ch;
+}
+
+.detail-reviews .cmt-actions:empty {
+  display: none;
+}
+
+.detail-reviews > .cmt-button--quiet {
+  align-self: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-scrim,
+  .flip-card,
+  .flip-inner {
+    transition: none;
+  }
+}

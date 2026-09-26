@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { monthLabel } from "../lib/format";
+import { localIsoDate, monthLabel } from "../lib/format";
 import { useAppState, useDispatch, useServices } from "../state/AppState";
 import { calendarToggled, daySelected } from "../state/events";
 import "./Calendar.css";
 
 export default function Calendar() {
-  const { calendar, movies } = useAppState();
+  const { calendar, movies, watched } = useAppState();
   const { selectedDay, collapsed } = calendar;
   const dispatch = useDispatch();
   const { analytics } = useServices();
@@ -56,21 +56,35 @@ export default function Calendar() {
     analytics.track("calendar_toggled", { collapsed: !collapsed });
   };
 
+  const today = localIsoDate(new Date());
+
   return (
     <div className="cal">
-      <header className="cal-header" onClick={toggleCollapsed}>
-        <span>{monthLabel(movies.items)}</span>
-        <span className={`cal-caret ${collapsed ? "down" : "up"}`} aria-hidden="true" />
-      </header>
+      <div className="cal-bar">
+        <button type="button" className="cal-header" aria-expanded={!collapsed} onClick={toggleCollapsed}>
+          <span>{monthLabel(movies.items)}</span>
+          <span className={`cal-caret ${collapsed ? "down" : "up"}`} aria-hidden="true" />
+        </button>
+        <ul className="cal-legend" aria-label="Key">
+          <li className="is-today">Today</li>
+          <li className="is-watched">Watched</li>
+          <li className="is-upcoming">Upcoming</li>
+        </ul>
+      </div>
       <div className={`cal-grid ${collapsed ? "is-collapsed" : ""}`} role="group" aria-label="Choose a night">
-        {movies.items.map(({ day }) => {
+        {movies.items.map(({ id, day, date }) => {
           const isSelected = day === selectedDay;
+          const isToday = date === today;
+          const isWatched = watched.includes(id);
+          const classes = ["cal-day", isSelected && "is-selected", isToday && "is-today", isWatched && "is-watched"];
           return (
             <button
               key={day}
               type="button"
-              className={`cal-day${isSelected ? " is-selected" : ""}`}
+              className={classes.filter(Boolean).join(" ")}
               aria-pressed={isSelected}
+              aria-current={isToday ? "date" : undefined}
+              aria-label={isWatched ? `${day}, watched` : undefined}
               onClick={() => handleClick(day)}
             >
               {day}
