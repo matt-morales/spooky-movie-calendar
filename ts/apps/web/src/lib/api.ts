@@ -22,6 +22,12 @@ export interface Movie {
   rating: RatingSummary;
 }
 
+/** A year's lineup: its nights, plus the Letterboxd list it's published as. */
+export interface Lineup {
+  movies: Movie[];
+  letterboxdListUrl?: string;
+}
+
 export class ApiError extends Error {
   override name = "ApiError";
   constructor(
@@ -34,7 +40,7 @@ export class ApiError extends Error {
 }
 
 export interface Api {
-  movies(year: number): Promise<Movie[]>;
+  lineup(year: number): Promise<Lineup>;
   rate(movieId: string, value: number): Promise<RatingSummary>;
 }
 
@@ -53,7 +59,10 @@ export function createApi({ fetch: doFetch = fetch }: { fetch?: typeof fetch } =
   }
 
   return {
-    movies: async (year) => (await request<{ movies: Movie[] }>(`/movies?year=${year}`)).movies,
+    lineup: async (year) => {
+      const body = await request<{ movies: Movie[]; lineup?: { letterboxdListUrl?: string } }>(`/movies?year=${year}`);
+      return { movies: body.movies, letterboxdListUrl: body.lineup?.letterboxdListUrl };
+    },
     rate: (movieId, value) =>
       request(`/movies/${encodeURIComponent(movieId)}/rating`, { method: "PUT", body: JSON.stringify({ value }) }),
   };

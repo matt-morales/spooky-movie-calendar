@@ -29,7 +29,7 @@ function watchErrors(page: Page) {
   return errors;
 }
 
-async function open(page: Page, path = "/") {
+async function open(page: Page, path = "/2025") {
   await page.goto(path);
   await expect(nights(page)).toHaveCount(31);
   await expect(page.locator(".movie-section")).toHaveCount(31);
@@ -134,7 +134,7 @@ test.describe("calendar", () => {
   // Known bug: the browser jumps to #movie-20 before the movies have loaded,
   // so a shared link opens at the top of the page. Remove .fixme once fixed.
   test.fixme("a shared link to a night opens on that night", async ({ page }) => {
-    await open(page, "/#movie-20");
+    await open(page, "/2025#movie-20");
     await expectLandedOn(page, 20);
   });
 });

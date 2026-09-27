@@ -1,8 +1,11 @@
+import { useAppState } from "../state/AppState";
 import HauntedHouse from "./house/HauntedHouse";
 import Title from "./Title";
 import "./Sidebar.css";
 
 export default function Sidebar() {
+  const listUrl = useAppState().movies.letterboxdListUrl;
+
   return (
     <aside className="sidebar">
       <Title />
@@ -40,17 +43,14 @@ export default function Sidebar() {
         </p>
 
         <ul className="sb-links">
-          <li>
-            <a
-              href="https://letterboxd.com/snowkempm/list/31-nights-of-halloween-whore-movies/"
-              className="sb-link"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img src="/icons/letterboxd.png" alt="" className="sb-link-icon" aria-hidden="true" />
-              <span className="sb-link-text">Letterboxd</span>
-            </a>
-          </li>
+          {listUrl && (
+            <li>
+              <a href={listUrl} className="sb-link" target="_blank" rel="noopener noreferrer">
+                <img src="/icons/letterboxd.png" alt="" className="sb-link-icon" aria-hidden="true" />
+                <span className="sb-link-text">Letterboxd</span>
+              </a>
+            </li>
+          )}
         </ul>
       </div>
 

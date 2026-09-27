@@ -24,12 +24,15 @@ function setup(api: Partial<Api> = {}) {
   const calls: string[] = [];
   const services = {
     api: {
-      movies: vi.fn(async () => {
+      lineup: vi.fn(async () => {
         calls.push("movies");
-        return [
-          movie(1, "Christine", { directors: ["John Carpenter"], rating: { average: 7, count: 2, mine: null } }),
-          movie(2, "The Grudge"),
-        ];
+        return {
+          movies: [
+            movie(1, "Christine", { directors: ["John Carpenter"], rating: { average: 7, count: 2, mine: null } }),
+            movie(2, "The Grudge"),
+          ],
+          letterboxdListUrl: "https://letterboxd.com/someone/list/2025/",
+        };
       }),
       rate: vi.fn(async () => ({ average: 8, count: 3, mine: 10 })),
       ...api,
@@ -79,7 +82,7 @@ describe("App", () => {
 
     const card = await cardFor("Christine");
     expect(calls).toEqual(["page_view", "movies"]);
-    expect(api.movies).toHaveBeenCalledWith(2025);
+    expect(api.lineup).toHaveBeenCalledWith(2025);
     expect(within(card).getByText("October 1st")).toBeInTheDocument();
     expect(within(card).getByText("John Carpenter")).toBeInTheDocument();
     expect(within(card).getByText("7/10")).toBeInTheDocument();
@@ -108,9 +111,17 @@ describe("App", () => {
     expect(document.getElementById("movie-31")).toContainElement(tapes[28]!);
   });
 
+  it("links the sidebar to the year's Letterboxd list", async () => {
+    setup();
+    expect(await screen.findByRole("link", { name: "Letterboxd" })).toHaveAttribute(
+      "href",
+      "https://letterboxd.com/someone/list/2025/",
+    );
+  });
+
   it("shows an error when the lineup can't be loaded", async () => {
     setup({
-      movies: async () => {
+      lineup: async () => {
         throw new Error("offline");
       },
     });
