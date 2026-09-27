@@ -9,7 +9,13 @@ export interface RatingState {
 }
 
 export interface AppState {
-  movies: { status: "loading" | "ready" | "failed"; year: number | null; items: Movie[]; error: string | null };
+  movies: {
+    status: "loading" | "ready" | "failed";
+    year: number | null;
+    items: Movie[];
+    letterboxdListUrl: string | null; // the lineup's Letterboxd list, once loaded
+    error: string | null;
+  };
   calendar: { selectedDay: number; collapsed: boolean };
   ratings: Record<string, RatingState>;
   watched: string[]; // movie IDs this visitor has marked as watched
@@ -26,7 +32,7 @@ export function dayFromHash(hash: string): number {
 
 export function createInitialState(hash = "", watched: string[] = []): AppState {
   return {
-    movies: { status: "loading", year: null, items: [], error: null },
+    movies: { status: "loading", year: null, items: [], letterboxdListUrl: null, error: null },
     calendar: { selectedDay: dayFromHash(hash), collapsed: false },
     ratings: {},
     watched,
@@ -51,7 +57,13 @@ export function reducer(state: AppState, event: AppEvent): AppState {
       }
       return {
         ...state,
-        movies: { status: "ready", year: event.year, items: event.movies, error: null },
+        movies: {
+          status: "ready",
+          year: event.year,
+          items: event.movies,
+          letterboxdListUrl: event.letterboxdListUrl ?? null,
+          error: null,
+        },
         ratings,
       };
     }

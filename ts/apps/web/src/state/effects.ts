@@ -6,7 +6,8 @@ import { moviesFailed, moviesLoaded, ratingFailed, ratingSaved, ratingSubmitted,
 
 export async function loadMovies(dispatch: Dispatch<AppEvent>, api: Api, year: number) {
   try {
-    dispatch(moviesLoaded(year, await api.movies(year)));
+    const { movies, letterboxdListUrl } = await api.lineup(year);
+    dispatch(moviesLoaded(year, movies, letterboxdListUrl));
   } catch (e) {
     dispatch(moviesFailed(String(e)));
   }

@@ -1,13 +1,14 @@
 import { expect, test } from "@playwright/test";
 
 // End-to-end check of the main flows against the real API and database.
+// They use the 2025 lineup: it's complete and won't change.
 
 test("loads the lineup, rates a movie and opens its reviews", async ({ page }) => {
   const errors: string[] = [];
   // Cloudflare's analytics beacon rejects localhost; that error is expected in dev.
   page.on("pageerror", (e) => !/cloudflareinsights\.com/.test(e.message) && errors.push(e.message));
 
-  await page.goto("/");
+  await page.goto("/2025");
   await expect(page.getByRole("heading", { name: "Christine" })).toBeVisible();
   await expect(page.getByText("October 2025")).toBeVisible();
   await expect(page.getByRole("group", { name: "Choose a night" }).getByRole("button")).toHaveCount(31);
@@ -31,14 +32,14 @@ test("loads the lineup, rates a movie and opens its reviews", async ({ page }) =
 });
 
 test("the calendar jumps to a night", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/2025");
   await page.getByRole("group", { name: "Choose a night" }).getByRole("button", { name: "13", exact: true }).click();
   await expect(page).toHaveURL(/#movie-13$/);
   await expect(page.getByRole("heading", { name: "Friday the 13th: The Final Chapter" })).toBeInViewport();
 });
 
 test("card buttons are styled like the rest of the page", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/2025");
   const button = page.locator("article.movie-card").first().getByRole("button", { name: "Mark as watched" });
   const style = await button.evaluate((el) => {
     const s = getComputedStyle(el);
@@ -46,4 +47,15 @@ test("card buttons are styled like the rest of the page", async ({ page }) => {
   });
   expect(style.font).toMatch(/Inter/); // browser-default buttons use a system font
   expect(style.background).not.toBe("rgb(239, 239, 239)"); // not the default grey fill
+});
+
+test("the year is in the path, and / opens the current lineup", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/2026$/);
+  await expect(page.getByText("October 2026")).toBeVisible();
+
+  await page.goto("/?year=2025#movie-3");
+  await expect(page).toHaveURL(/\/2025#movie-3$/);
+  await expect(page.getByText("October 2025")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Letterboxd", exact: true })).toHaveAttribute("href", /snowkempm/);
 });

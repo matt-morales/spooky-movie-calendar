@@ -8,7 +8,7 @@ export interface Summary {
 }
 
 export type AppEvent =
-  | { type: "movies/loaded"; year: number; movies: Movie[] }
+  | { type: "movies/loaded"; year: number; movies: Movie[]; letterboxdListUrl?: string }
   | { type: "movies/failed"; error: string }
   | { type: "calendar/daySelected"; day: number }
   | { type: "calendar/toggled" }
@@ -17,7 +17,12 @@ export type AppEvent =
   | { type: "ratings/failed"; movieId: string; previous: number | null; error: string }
   | { type: "watched/toggled"; movieId: string };
 
-export const moviesLoaded = (year: number, movies: Movie[]): AppEvent => ({ type: "movies/loaded", year, movies });
+export const moviesLoaded = (year: number, movies: Movie[], letterboxdListUrl?: string): AppEvent => ({
+  type: "movies/loaded",
+  year,
+  movies,
+  letterboxdListUrl,
+});
 export const moviesFailed = (error: string): AppEvent => ({ type: "movies/failed", error });
 
 export const daySelected = (day: number): AppEvent => ({ type: "calendar/daySelected", day });

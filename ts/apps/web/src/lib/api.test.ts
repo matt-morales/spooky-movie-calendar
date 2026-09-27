@@ -5,11 +5,14 @@ const json = (status: number, body: unknown) =>
   vi.fn(async () => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } }));
 
 describe("createApi", () => {
-  it("lists a year's movies", async () => {
-    const fetch = json(200, { movies: [{ id: "2025-01" }] });
-    const movies = await createApi({ fetch }).movies(2025);
+  it("loads a year's lineup: its movies and Letterboxd list", async () => {
+    const fetch = json(200, {
+      movies: [{ id: "2025-01" }],
+      lineup: { year: 2025, letterboxdListUrl: "https://letterboxd.com/someone/list/x/" },
+    });
+    const lineup = await createApi({ fetch }).lineup(2025);
 
-    expect(movies).toEqual([{ id: "2025-01" }]);
+    expect(lineup).toEqual({ movies: [{ id: "2025-01" }], letterboxdListUrl: "https://letterboxd.com/someone/list/x/" });
     expect(fetch).toHaveBeenCalledWith("/api/movies?year=2025", expect.objectContaining({ credentials: "same-origin" }));
   });
 
