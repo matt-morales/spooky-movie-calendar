@@ -45,5 +45,6 @@ The earlier tasks 1–3 are complete in code. The decisions and reasoning are in
 
 - [ ] Nightly `pg_dump` from Neon to R2. Neon's free restore window is only 6 hours.
 - [ ] A small moderation page behind Cloudflare Access, instead of the CLI.
-- [ ] Saved SQL queries or a dashboard for the `events` table (visits per day, popular nights, ratings over time).
+- [x] Saved queries for the `events` table: `make events` (`REPORT=types|daily|nights|movies|countries|referrers|latest`, `DAYS=30`).
+- [ ] A dashboard for the `events` table (charts over time), if the reports aren't enough.
 - [ ] Decide whether October traffic justifies `min_instance_count = 1` on Cloud Run, to remove cold starts for a few dollars a month.
