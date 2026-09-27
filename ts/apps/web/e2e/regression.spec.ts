@@ -232,13 +232,23 @@ test.describe("movies", () => {
 });
 
 test.describe("layout", () => {
-  test("on wide screens, Add your review lines up under the other buttons", async ({ page }) => {
+  test("on wide screens, the rating sits above one row of buttons", async ({ page }) => {
     test.skip((page.viewportSize()?.width ?? 0) < 1024, "phones stack the buttons full width");
+    await page.setViewportSize({ width: 2300, height: 900 });
     await open(page);
     const card = page.locator("#movie-1");
-    const left = async (el: Locator) => Math.round((await el.boundingBox())!.x);
-    const letterboxd = await left(card.getByRole("link", { name: "View on Letterboxd" }));
-    expect(await left(card.getByRole("button", { name: "Add your review" }))).toBe(letterboxd);
+    const box = async (el: Locator) => (await el.boundingBox())!;
+    const score = await box(card.locator(".tile-score"));
+    const buttons = await Promise.all(
+      [
+        card.getByRole("link", { name: "View on Letterboxd" }),
+        card.getByRole("button", { name: "Mark as watched" }),
+        card.getByRole("button", { name: "Add your review" }),
+      ].map(box),
+    );
+    expect(new Set(buttons.map((b) => Math.round(b.y))).size).toBe(1); // one row
+    expect(buttons[0]!.y).toBeGreaterThan(score.y + score.height - 1); // below the rating
+    expect(Math.round(buttons[0]!.x)).toBe(Math.round(score.x)); // left-aligned with it
   });
 
   for (const width of [320, 360, 390, 412]) {

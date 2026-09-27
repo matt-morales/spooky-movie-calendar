@@ -77,7 +77,7 @@ export default function MovieTile({ movie, headingId, onOpen, onAddReview }: Pro
             )}
           </span>
 
-          {/* Their own group, so a button that wraps lines up under the first. */}
+          {/* Their own row, under the score. */}
           <div className="tile-buttons">
             <a className="btn" href={letterboxdLink(movie)} target="_blank" rel="noopener noreferrer">
               <img src="/icons/letterboxd.png" alt="" />
