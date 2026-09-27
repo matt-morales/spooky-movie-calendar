@@ -8,13 +8,20 @@ export function prefersReducedMotion(): boolean {
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/** Stops the page behind a modal from scrolling. Nested modals restore in order. */
+/**
+ * Stops the page behind a modal from scrolling, keeping its place. Only
+ * <html> is locked: `overflow: hidden` there applies to the window. On <body>
+ * (which is height: 100%) it would shrink the page to one screen, and the
+ * browser would jump to the top. Nested modals restore in order.
+ */
 export function useScrollLock() {
   useEffect(() => {
-    const els = [document.documentElement, document.body];
-    const previous = els.map((el) => el.style.overflow);
-    els.forEach((el) => (el.style.overflow = "hidden"));
-    return () => els.forEach((el, i) => (el.style.overflow = previous[i] ?? ""));
+    const root = document.documentElement;
+    const previous = root.style.overflow;
+    root.style.overflow = "hidden";
+    return () => {
+      root.style.overflow = previous;
+    };
   }, []);
 }
 

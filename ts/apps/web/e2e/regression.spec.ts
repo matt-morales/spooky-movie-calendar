@@ -49,6 +49,17 @@ async function expectLandedOn(page: Page, day: number) {
   await expect.poll(async () => (await gap()) < 40 || (await atBottom()), { timeout: 5000 }).toBe(true);
 }
 
+// The scroll position once any smooth scrolling has finished.
+async function settledScrollY(page: Page): Promise<number> {
+  let last = -1;
+  for (;;) {
+    const y = await page.evaluate(() => scrollY);
+    if (y === last) return y;
+    last = y;
+    await page.waitForTimeout(150);
+  }
+}
+
 const scrollPageTo = (page: Page, y: number) => page.evaluate((y) => window.scrollTo(0, y), y);
 
 test.describe("loading", () => {
@@ -168,6 +179,38 @@ test.describe("movies", () => {
     await expect(detail).toBeHidden();
   });
 
+  test("closing the reviews or the review form keeps your place on the page", async ({ page }) => {
+    await open(page);
+    await press(night(page, 10));
+    await expectLandedOn(page, 10);
+    const card = page.locator("#movie-10 article.movie-card");
+
+    // Presses target (scrolled into view first, as a visitor would), runs
+    // close, and checks the page is back exactly where it was.
+    async function keepsPlace(target: Locator, close: () => Promise<void>) {
+      await target.scrollIntoViewIfNeeded();
+      const before = await settledScrollY(page);
+      expect(before).toBeGreaterThan(500);
+      await press(target);
+      await close();
+      await expect.poll(async () => Math.abs((await settledScrollY(page)) - before)).toBeLessThanOrEqual(2);
+    }
+
+    await keepsPlace(card.locator(".tile-desc"), async () => {
+      await expect(page.locator('.detail-layer[data-phase="open"]')).toBeVisible();
+      const detail = page.getByRole("dialog", { name: "Mirrors" });
+      await press(detail.getByRole("button", { name: "Close reviews" }));
+      await expect(detail).toBeHidden();
+    });
+
+    await keepsPlace(card.getByRole("button", { name: "Add your review" }), async () => {
+      const modal = page.getByRole("dialog", { name: "Review Mirrors" });
+      await expect(modal).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(modal).toBeHidden();
+    });
+  });
+
   test("the review form opens, takes a rating and closes", async ({ page }) => {
     await open(page);
     await press(page.locator("#movie-2").getByRole("button", { name: "Add your review" }));
@@ -189,6 +232,15 @@ test.describe("movies", () => {
 });
 
 test.describe("layout", () => {
+  test("on wide screens, Add your review lines up under the other buttons", async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) < 1024, "phones stack the buttons full width");
+    await open(page);
+    const card = page.locator("#movie-1");
+    const left = async (el: Locator) => Math.round((await el.boundingBox())!.x);
+    const letterboxd = await left(card.getByRole("link", { name: "View on Letterboxd" }));
+    expect(await left(card.getByRole("button", { name: "Add your review" }))).toBe(letterboxd);
+  });
+
   for (const width of [320, 360, 390, 412]) {
     test(`no sideways scrolling at ${width}px wide`, async ({ page, isMobile }) => {
       test.skip(!isMobile, "phone widths only");
