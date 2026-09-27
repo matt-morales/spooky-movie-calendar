@@ -77,18 +77,21 @@ export default function MovieTile({ movie, headingId, onOpen, onAddReview }: Pro
             )}
           </span>
 
-          <a className="btn" href={letterboxdLink(movie)} target="_blank" rel="noopener noreferrer">
-            <img src="/icons/letterboxd.png" alt="" />
-            View on Letterboxd
-          </a>
-          <button type="button" className="btn" aria-pressed={watched} onClick={toggleWatched}>
-            {watched ? <CheckIcon /> : <EyeIcon />}
-            {watched ? "Watched" : "Mark as watched"}
-          </button>
-          <button type="button" className="btn btn-primary" aria-haspopup="dialog" onClick={onAddReview}>
-            <PencilIcon />
-            Add your review
-          </button>
+          {/* Their own group, so a button that wraps lines up under the first. */}
+          <div className="tile-buttons">
+            <a className="btn" href={letterboxdLink(movie)} target="_blank" rel="noopener noreferrer">
+              <img src="/icons/letterboxd.png" alt="" />
+              View on Letterboxd
+            </a>
+            <button type="button" className="btn" aria-pressed={watched} onClick={toggleWatched}>
+              {watched ? <CheckIcon /> : <EyeIcon />}
+              {watched ? "Watched" : "Mark as watched"}
+            </button>
+            <button type="button" className="btn btn-primary" aria-haspopup="dialog" onClick={onAddReview}>
+              <PencilIcon />
+              Add your review
+            </button>
+          </div>
         </div>
       </div>
 

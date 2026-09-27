@@ -123,12 +123,21 @@
 /* ---------------- Actions ----------------
    They wrap inside the details column, so they can never run over the
    backdrop image beside it. */
+/* The score, then the buttons. The buttons wrap within their own column,
+   and the score lines up with the first row of them. */
 .tile-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-md);
   margin-top: var(--space-sm);
+}
+
+.tile-buttons {
+  flex: 1 1 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
 }
 
 .tile-score {
@@ -235,7 +244,8 @@
     flex: 1 1 auto;
   }
 
-  .tile-score {
+  .tile-score,
+  .tile-buttons {
     flex-basis: 100%;
   }
 
