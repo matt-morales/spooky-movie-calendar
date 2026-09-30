@@ -15,6 +15,8 @@ SHELL := /bin/bash
 # Docker Desktop and the Google Cloud CLI installer may not add themselves to PATH.
 export PATH := $(HOME)/.docker/bin:$(HOME)/google-cloud-sdk/bin:$(PATH)
 TF := terraform -chdir=infra
+# The GCP project, from the Terraform-generated deploy.env (not gcloud's default).
+GCP_PROJECT := $(shell . ./deploy.env 2>/dev/null && echo $$GCP_PROJECT)
 
 # Deploy credentials from the git-ignored .secrets.env, if present (CI sets
 # them as environment variables instead).
@@ -92,7 +94,7 @@ upload-posters:
 # One-off: copy the 2025 Firestore ratings into Neon (best effort, re-runnable).
 import-firestore-ratings:
 	cd go && FIRESTORE_TOKEN="$$(gcloud auth print-access-token)" \
-	  DATABASE_URL="$$(gcloud secrets versions access latest --secret=api-database-url)" \
+	  DATABASE_URL="$$(gcloud secrets versions access latest --secret=api-database-url --project $(GCP_PROJECT))" \
 	  go run ./cmd/import-firestore-ratings
 
 # Analytics reports from the production events table (read-only). Days and
@@ -104,5 +106,5 @@ REPORT ?= summary
 DAYS ?= 7
 EVENTS_TZ ?= $(or $(shell readlink /etc/localtime 2>/dev/null | sed -n 's|.*zoneinfo/||p'),UTC)
 events:
-	@cd go && DATABASE_URL="$$(gcloud secrets versions access latest --secret=api-database-url)" \
+	@cd go && DATABASE_URL="$$(gcloud secrets versions access latest --secret=api-database-url --project $(GCP_PROJECT))" \
 	  go run ./cmd/events -days $(DAYS) -tz $(EVENTS_TZ) $(REPORT)
