@@ -48,8 +48,8 @@ func seeded(t *testing.T) *pgx.Conn {
 		{"page_view", "v1", "NZ", "", `{}`, 30 * 24 * time.Hour}, // outside the window
 		{"day_selected", "v1", "NZ", "", `{"day": 3}`, time.Hour},
 		{"day_selected", "v2", "US", "", `{"day": 3}`, time.Hour},
-		{"reviews_opened", "v1", "NZ", "", `{"movieId": "2026-05"}`, time.Hour},
-		{"rating_saved", "v2", "", "", `{"movieId": "2026-05", "value": 8}`, time.Hour},
+		{"reviews_opened", "v1", "NZ", "", `{"movieId": "2025-01"}`, time.Hour},
+		{"rating_saved", "v2", "", "", `{"movieId": "2025-01", "value": 8}`, time.Hour},
 	} {
 		_, err := conn.Exec(ctx, `INSERT INTO events (type, source, visitor_id, country, referrer, props, occurred_at)
 			VALUES ($1, 'client', $2, $3, $4, $5, $6)`, e.typ, e.visitor, e.country, e.referrer, e.props, now.Add(-e.ago))
@@ -82,7 +82,7 @@ func TestNightsAndMoviesUseTheirProps(t *testing.T) {
 		t.Errorf("nights report:\n%s", out)
 	}
 	// Movie IDs are joined to titles.
-	if out := runReport(t, conn, "movies"); !regexpMatch(`2026-05\s+Late Night with the Devil\s+1\s+1`, out) {
+	if out := runReport(t, conn, "movies"); !regexpMatch(`2025-01\s+Christine\s+1\s+1`, out) {
 		t.Errorf("movies report:\n%s", out)
 	}
 }

@@ -103,8 +103,8 @@ func TestMigrationsSeedThe2026Lineup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(movies) != 26 {
-		t.Fatalf("got %d movies, want 26", len(movies))
+	if len(movies) != 31 {
+		t.Fatalf("got %d movies, want 31", len(movies))
 	}
 	first := movies[0]
 	if first.ID != "2026-01" || first.Title != "Backrooms" || first.ReleaseYear != 2026 ||
@@ -114,14 +114,29 @@ func TestMigrationsSeedThe2026Lineup(t *testing.T) {
 		!first.Date.Equal(time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)) {
 		t.Errorf("first movie = %+v", first)
 	}
-	if m := movies[4]; m.Title != "Late Night with the Devil" || m.HostRating != 7 || len(m.Directors) != 2 {
-		t.Errorf("day 5 = %+v", m)
+	// The final order from the Letterboxd list, with the owner's ratings.
+	for day, want := range map[int]struct {
+		title string
+		host  int
+	}{
+		2:  {"Teenage Sex and Death at Camp Miasma", 0},
+		6:  {"Late Night with the Devil", 7},
+		14: {"Hellraiser", 0},
+		20: {"Obsession", 9},
+		22: {"Resident Evil", 7},
+		24: {"Noroi: The Curse", 8},
+		31: {"Trick 'r Treat", 0},
+	} {
+		m := movies[day-1]
+		if m.Day != day || m.Title != want.title || m.HostRating != want.host ||
+			!strings.HasPrefix(m.LetterboxdURL, "https://letterboxd.com/film/") || m.PosterPath == "" || m.Description == "" {
+			t.Errorf("day %d = %+v, want %q rated %d", day, m, want.title, want.host)
+		}
 	}
-	if m := movies[6]; m.Title != "Trick 'r Treat" {
-		t.Errorf("apostrophe mangled: %q", m.Title)
-	}
-	if m := movies[25]; m.Day != 26 || m.Title != "When Evil Lurks" {
-		t.Errorf("last movie = %+v", m)
+	for _, m := range movies {
+		if m.Title == "Hostel: Part II" || m.Title == "Revenge" {
+			t.Errorf("%q was dropped from the list but is still night %d", m.Title, m.Day)
+		}
 	}
 }
 
