@@ -45,6 +45,6 @@ The earlier tasks 1–3 are complete in code. The decisions and reasoning are in
 
 - [ ] Nightly `pg_dump` from Neon to R2. Neon's free restore window is only 6 hours.
 - [ ] A small moderation page behind Cloudflare Access, instead of the CLI.
-- [x] Analytics reports: `make events` prints the full report (overview, per movie, per country); `REPORT=summary|types|daily|nights|movies|countries|referrers|latest`, `DAYS=30`, `YEAR=2025`.
+- [x] Analytics reports: `make events` prints the full report (unique visitors, overview, per movie, per country; automated traffic excluded); `REPORT=summary|visitors|returns|types|daily|nights|movies|countries|referrers|latest`, `DAYS=30`, `YEAR=2025`.
 - [ ] A dashboard for the `events` table (charts over time), if the reports aren't enough.
 - [ ] Decide whether October traffic justifies `min_instance_count = 1` on Cloud Run, to remove cold starts for a few dollars a month.

@@ -37,9 +37,49 @@ type report struct {
 	heading func(o options) string
 }
 
-const window = `occurred_at > now() - make_interval(days => @days)`
+// human leaves out automated traffic: headless browsers (including this
+// repo's own Playwright checks), bots and crawlers. Server events have no
+// user agent, so they're kept.
+const human = `user_agent !~* '(headless|playwright|bot|crawl|spider)'`
+
+// window selects human events from the last @days days. Every events query
+// uses it, so no report counts automated traffic.
+const window = `occurred_at > now() - make_interval(days => @days) AND ` + human
 
 var reports = map[string]report{
+	// Unique visitors are browsers (the signed "vid" cookie), not people. A
+	// visitor is new on the day of their first event ever, returning after.
+	// The "all" row covers the whole window: new if first seen inside it.
+	"visitors": {title: "Unique visitors", sql: `
+		WITH first_seen AS (
+		    SELECT visitor_id, min(occurred_at) AS first_at FROM events WHERE visitor_id <> '' AND ` + human + ` GROUP BY 1),
+		views AS (
+		    SELECT e.visitor_id, e.session_id, e.occurred_at::date AS day, f.first_at
+		    FROM events e JOIN first_seen f USING (visitor_id)
+		    WHERE e.type = 'page_view' AND ` + window + `)
+		SELECT 'all' AS day, count(DISTINCT visitor_id) AS visitors,
+		       count(DISTINCT visitor_id) FILTER (WHERE first_at > now() - make_interval(days => @days)) AS new,
+		       count(DISTINCT visitor_id) FILTER (WHERE first_at <= now() - make_interval(days => @days)) AS returning,
+		       count(DISTINCT session_id) AS visits, count(*) AS page_views
+		FROM views
+		UNION ALL
+		SELECT * FROM (
+		    SELECT to_char(day, 'YYYY-MM-DD'), count(DISTINCT visitor_id),
+		           count(DISTINCT visitor_id) FILTER (WHERE first_at::date = day),
+		           count(DISTINCT visitor_id) FILTER (WHERE first_at::date < day),
+		           count(DISTINCT session_id), count(*)
+		    FROM views GROUP BY day ORDER BY day DESC) per_day`},
+
+	// How loyal visitors are: on how many different days each one came.
+	"returns": {title: "Days each visitor came", sql: `
+		WITH per_visitor AS (
+		    SELECT visitor_id, count(DISTINCT occurred_at::date) AS days
+		    FROM events WHERE type = 'page_view' AND visitor_id <> '' AND ` + window + `
+		    GROUP BY 1)
+		SELECT days AS days_visited, count(*) AS visitors,
+		       round(100.0 * count(*) / sum(count(*)) OVER ())::int || '%' AS share
+		FROM per_visitor GROUP BY 1 ORDER BY 1`},
+
 	"types": {title: "Events by type", sql: `
 		SELECT type, count(*) AS events, count(DISTINCT visitor_id) AS visitors
 		FROM events WHERE ` + window + `
@@ -113,7 +153,7 @@ var reports = map[string]report{
 
 // Reports made of several others.
 var groups = map[string][]string{
-	"full":    {"types", "daily", "movies", "countries"},
+	"full":    {"visitors", "returns", "types", "daily", "movies", "countries"},
 	"summary": {"types", "daily"},
 }
 

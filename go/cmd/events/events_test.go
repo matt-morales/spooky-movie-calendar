@@ -123,9 +123,56 @@ func TestCountriesShowsEachCountrysShare(t *testing.T) {
 	}
 }
 
+func TestAutomatedTrafficIsLeftOut(t *testing.T) {
+	conn := seeded(t)
+	for _, ua := range []string{
+		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/130.0 Safari/537.36",
+		"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+	} {
+		if _, err := conn.Exec(ctx, `INSERT INTO events (type, source, visitor_id, country, user_agent, occurred_at)
+			VALUES ('page_view', 'client', $1, 'SG', $1, now())`, ua); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// Same counts as without them: 2 page views from 2 visitors, no SG.
+	if out := runReport(t, conn, "types"); !regexpMatch(`page_view\s+2\s+2`, out) {
+		t.Errorf("types report counts automated traffic:\n%s", out)
+	}
+	if out := runReport(t, conn, "countries"); strings.Contains(out, "SG") {
+		t.Errorf("countries report counts automated traffic:\n%s", out)
+	}
+	if out := runReport(t, conn, "visitors"); !regexpMatch(`(?m)^all\s+2\s`, out) {
+		t.Errorf("visitors report counts automated traffic:\n%s", out)
+	}
+}
+
+func TestVisitorsSplitsNewFromReturning(t *testing.T) {
+	conn := seeded(t)
+	// v3 first visits three days ago and comes back today.
+	for _, ago := range []time.Duration{3 * 24 * time.Hour, time.Hour} {
+		if _, err := conn.Exec(ctx, `INSERT INTO events (type, source, visitor_id, session_id, occurred_at)
+			VALUES ('page_view', 'client', 'v3', $1, $2)`, ago.String(), time.Now().Add(-ago)); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// v1 was first seen before the window (returning); v2 and v3 are new.
+	// day, visitors, new, returning
+	out := runReport(t, conn, "visitors")
+	if !regexpMatch(`(?m)^all\s+3\s+2\s+1\s`, out) {
+		t.Errorf("visitors report:\n%s", out)
+	}
+
+	// How many days each visitor came on: v1 and v2 once, v3 twice.
+	out = runReport(t, conn, "returns")
+	if !regexpMatch(`(?m)^1\s+2\s+67%`, out) || !regexpMatch(`(?m)^2\s+1\s+33%`, out) {
+		t.Errorf("returns report:\n%s", out)
+	}
+}
+
 func TestFullReportHasOverviewMoviesAndCountries(t *testing.T) {
 	out := runReport(t, seeded(t), "full")
-	for _, want := range []string{"Events by type", "Per day", "Per movie, 2025", "Visitors by country"} {
+	for _, want := range []string{"Unique visitors", "Days each visitor came", "Events by type", "Per day", "Per movie, 2025", "Visitors by country"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("full report is missing %q:\n%s", want, out)
 		}

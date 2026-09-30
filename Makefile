@@ -104,9 +104,9 @@ import-firestore-ratings:
 
 # Analytics reports from production (read-only). Days and times are shown in
 # this machine's time zone; the movies report covers this year's lineup.
-#   make events                              full report: overview, per movie, per country (last 7 days)
+#   make events                              full report: visitors, overview, per movie, per country (last 7 days)
 #   make events REPORT=movies DAYS=30 YEAR=2025
-# Reports: full summary types daily nights movies countries referrers latest
+# Reports: full summary visitors returns types daily nights movies countries referrers latest
 REPORT ?= full
 DAYS ?= 7
 EVENTS_TZ ?= $(or $(shell readlink /etc/localtime 2>/dev/null | sed -n 's|.*zoneinfo/||p'),UTC)
