@@ -23,7 +23,7 @@ GCP_PROJECT := $(shell . ./deploy.env 2>/dev/null && echo $$GCP_PROJECT)
 -include .secrets.env
 export CLOUDFLARE_API_TOKEN NEON_API_KEY
 
-.PHONY: up down reset-db logs dev e2e test test-go test-ts lint generate check-generated build \
+.PHONY: up down reset-db logs dev e2e test test-go test-ts lint lint-go lint-tf generate check-generated build \
         infra-init infra-plan infra infra-apply deploy deploy-api deploy-web \
         upload-posters import-firestore-ratings events
 
@@ -56,8 +56,13 @@ test-ts:
 e2e:
 	cd ts/apps/web && npx playwright test
 
-lint:
+# CI runs each half in the job that has the tool installed.
+lint: lint-go lint-tf
+
+lint-go:
 	cd go && test -z "$$(gofmt -l .)" || (gofmt -l . && exit 1)
+
+lint-tf:
 	$(TF) fmt -check -recursive
 
 generate:
