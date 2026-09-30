@@ -28,7 +28,7 @@ jobs:
         with:
           go-version-file: go/go.mod
           cache-dependency-path: go/go.sum
-      - run: make lint check-generated
+      - run: make lint-go check-generated
       - run: make test-go
 
   ts:
@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
-      - run: terraform -chdir=infra fmt -check -recursive
+      - run: make lint-tf
       - run: terraform -chdir=infra init -backend=false -input=false
       - run: terraform -chdir=infra validate
 
