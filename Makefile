@@ -7,7 +7,7 @@
 #   make generate       regenerate sqlc code after editing SQL
 #   make infra          terraform apply (Cloudflare, GCP, Neon)
 #   make deploy         deploy the API, then the site
-#   make events         analytics reports from production (REPORT=movies DAYS=30)
+#   make events         analytics report from production (REPORT=movies DAYS=30 YEAR=2025)
 #
 # One-time setup: ./scripts/bootstrap.sh (see README "First-time setup").
 
@@ -102,14 +102,14 @@ import-firestore-ratings:
 	  DATABASE_URL="$$(gcloud secrets versions access latest --secret=api-database-url --project $(GCP_PROJECT))" \
 	  go run ./cmd/import-firestore-ratings
 
-# Analytics reports from the production events table (read-only). Days and
-# times are shown in this machine's time zone.
-#   make events                      summary of the last 7 days
-#   make events REPORT=movies DAYS=30
-# Reports: summary types daily nights movies countries referrers latest
-REPORT ?= summary
+# Analytics reports from production (read-only). Days and times are shown in
+# this machine's time zone; the movies report covers this year's lineup.
+#   make events                              full report: overview, per movie, per country (last 7 days)
+#   make events REPORT=movies DAYS=30 YEAR=2025
+# Reports: full summary types daily nights movies countries referrers latest
+REPORT ?= full
 DAYS ?= 7
 EVENTS_TZ ?= $(or $(shell readlink /etc/localtime 2>/dev/null | sed -n 's|.*zoneinfo/||p'),UTC)
 events:
 	@cd go && DATABASE_URL="$$(gcloud secrets versions access latest --secret=api-database-url --project $(GCP_PROJECT))" \
-	  go run ./cmd/events -days $(DAYS) -tz $(EVENTS_TZ) $(REPORT)
+	  go run ./cmd/events -days $(DAYS) -tz $(EVENTS_TZ) $(if $(YEAR),-year $(YEAR)) $(REPORT)

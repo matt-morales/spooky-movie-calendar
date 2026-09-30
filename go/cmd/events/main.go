@@ -1,11 +1,11 @@
-// Command events prints saved analytics reports from the events table. It
-// only reads: every report runs in a read-only transaction, and it never
-// runs migrations, so it's safe to point at production.
+// Command events prints saved analytics reports: site events, plus per-movie
+// ratings and reviews. It only reads: every report runs in a read-only
+// transaction, and it never runs migrations, so it's safe against production.
 //
-//	make events                       # summary of the last 7 days
-//	make events REPORT=movies DAYS=30
+//	make events                       # full report for the last 7 days
+//	make events REPORT=movies DAYS=30 YEAR=2025
 //
-//	DATABASE_URL=postgres://... go run ./cmd/events [-days 7] [-tz UTC] [report]
+//	DATABASE_URL=postgres://... go run ./cmd/events [-days 7] [-tz UTC] [-year 2026] [report]
 package main
 
 import (
@@ -27,26 +27,25 @@ import (
 type options struct {
 	days int    // how far back to look
 	tz   string // time zone for grouping by day and showing times
+	year int    // which lineup the movies report covers
 }
 
 type report struct {
 	title string
-	sql   string // $1 is the number of days to look back
+	sql   string // may use @days (how far back to look) and @year (the lineup)
+	// heading overrides the default "<title>, last N days (tz)".
+	heading func(o options) string
 }
 
-const window = `occurred_at > now() - make_interval(days => $1)`
-
-// movieID is the movie an event is about: ratings, reviews and "watched"
-// carry a movieId; comments carry their thread key, "movie:<id>".
-const movieID = `COALESCE(e.props->>'movieId', substring(e.props->>'threadKey' from '^movie:(.*)$'))`
+const window = `occurred_at > now() - make_interval(days => @days)`
 
 var reports = map[string]report{
-	"types": {"Events by type", `
+	"types": {title: "Events by type", sql: `
 		SELECT type, count(*) AS events, count(DISTINCT visitor_id) AS visitors
 		FROM events WHERE ` + window + `
 		GROUP BY type ORDER BY events DESC, type`},
 
-	"daily": {"Per day", `
+	"daily": {title: "Per day", sql: `
 		SELECT occurred_at::date AS day,
 		       count(*) FILTER (WHERE type = 'page_view')                    AS page_views,
 		       count(DISTINCT visitor_id) FILTER (WHERE type = 'page_view')  AS visitors,
@@ -56,58 +55,85 @@ var reports = map[string]report{
 		FROM events WHERE ` + window + `
 		GROUP BY 1 ORDER BY 1 DESC`},
 
-	"nights": {"Nights picked on the calendar", `
+	"nights": {title: "Nights picked on the calendar", sql: `
 		SELECT (props->>'day')::int AS night, count(*) AS clicks, count(DISTINCT visitor_id) AS visitors
 		FROM events WHERE type = 'day_selected' AND ` + window + `
 		GROUP BY 1 ORDER BY clicks DESC, night`},
 
-	"movies": {"Activity per movie", `
-		SELECT ` + movieID + ` AS movie, COALESCE(m.title, '') AS title,
-		       count(*) FILTER (WHERE e.type = 'reviews_opened')  AS reviews_opened,
-		       count(*) FILTER (WHERE e.type = 'rating_saved')    AS ratings,
-		       count(*) FILTER (WHERE e.type = 'watched_toggled' AND (e.props->>'watched')::boolean) AS watched,
-		       count(*) FILTER (WHERE e.type = 'comment_posted')  AS comments
-		FROM events e LEFT JOIN movies m ON m.id = ` + movieID + `
-		WHERE ` + movieID + ` IS NOT NULL AND e.` + window + `
-		GROUP BY 1, 2 ORDER BY count(*) DESC, movie`},
+	// Every night of the lineup. Card opens and watched marks are events in
+	// the window; ratings and reviews come from their own tables (all time),
+	// so they include ratings imported from the old site.
+	"movies": {title: "Per movie", sql: `
+		WITH opened AS (
+		    SELECT props->>'movieId' AS movie_id,
+		           count(*) FILTER (WHERE type = 'reviews_opened') AS card_opens,
+		           count(*) FILTER (WHERE type = 'watched_toggled' AND (props->>'watched')::boolean) AS watched
+		    FROM events WHERE props ? 'movieId' AND ` + window + `
+		    GROUP BY 1),
+		rated AS (
+		    SELECT movie_id, count(*) AS ratings, avg(value) AS average FROM ratings GROUP BY 1),
+		reviewed AS (
+		    SELECT substring(thread_key from '^movie:(.*)$') AS movie_id, count(*) AS reviews
+		    FROM comments WHERE status = 'visible' GROUP BY 1)
+		SELECT m.day AS night, m.title,
+		       COALESCE(o.card_opens, 0) AS card_opens, COALESCE(o.watched, 0) AS watched,
+		       COALESCE(r.ratings, 0) AS ratings, to_char(r.average, 'FM90.0') AS avg_of_10,
+		       COALESCE(v.reviews, 0) AS reviews
+		FROM movies m
+		LEFT JOIN opened o ON o.movie_id = m.id
+		LEFT JOIN rated r ON r.movie_id = m.id
+		LEFT JOIN reviewed v ON v.movie_id = m.id
+		WHERE m.year = @year
+		ORDER BY m.day`,
+		heading: func(o options) string {
+			return fmt.Sprintf("Per movie, %d (card opens and watched: last %d days; ratings and reviews: all time)", o.year, o.days)
+		}},
 
-	"countries": {"Visitors by country", `
+	"countries": {title: "Visitors by country", sql: `
 		SELECT COALESCE(NULLIF(country, ''), '?') AS country,
-		       count(DISTINCT visitor_id) AS visitors, count(*) AS page_views
+		       count(DISTINCT visitor_id) AS visitors,
+		       round(100.0 * count(DISTINCT visitor_id) / sum(count(DISTINCT visitor_id)) OVER ())::int || '%' AS share,
+		       count(*) AS page_views,
+		       count(DISTINCT session_id) AS sessions
 		FROM events WHERE type = 'page_view' AND ` + window + `
 		GROUP BY 1 ORDER BY visitors DESC, country`},
 
-	"referrers": {"Where visits came from", `
+	"referrers": {title: "Where visits came from", sql: `
 		SELECT substring(referrer from '^https?://([^/]+)') AS site,
 		       count(*) AS page_views, count(DISTINCT visitor_id) AS visitors
 		FROM events WHERE type = 'page_view' AND referrer <> '' AND ` + window + `
 		GROUP BY 1 ORDER BY page_views DESC, site LIMIT 25`},
 
-	"latest": {"Latest events", `
+	"latest": {title: "Latest events", sql: `
 		SELECT to_char(occurred_at, 'YYYY-MM-DD HH24:MI:SS') AS at, type, path, country,
 		       left(visitor_id, 8) AS visitor, props::text AS props
 		FROM events WHERE ` + window + `
 		ORDER BY occurred_at DESC LIMIT 50`},
 }
 
-// "summary" is several reports in one.
-var summary = []string{"types", "daily"}
+// Reports made of several others.
+var groups = map[string][]string{
+	"full":    {"types", "daily", "movies", "countries"},
+	"summary": {"types", "daily"},
+}
 
 func reportNames() []string {
-	names := []string{"summary"}
+	names := []string{"full", "summary"}
+	var single []string
 	for name := range reports {
-		names = append(names, name)
+		single = append(single, name)
 	}
-	slices.Sort(names[1:])
-	return names
+	slices.Sort(single)
+	return append(names, single...)
 }
 
 func main() {
 	var o options
 	flag.IntVar(&o.days, "days", 7, "how many days back to look")
 	flag.StringVar(&o.tz, "tz", "UTC", `time zone for days and times, e.g. "Asia/Singapore"`)
+	flag.IntVar(&o.year, "year", time.Now().Year(), "which year's lineup the movies report covers")
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "usage: events [-days N] [-tz ZONE] [%s]\n", strings.Join(reportNames(), " | "))
+		fmt.Fprintf(flag.CommandLine.Output(), "usage: events [-days N] [-tz ZONE] [-year YYYY] [%s]\n", strings.Join(reportNames(), " | "))
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -118,7 +144,7 @@ func main() {
 	}
 	name := flag.Arg(0)
 	if name == "" {
-		name = "summary"
+		name = "full"
 	}
 
 	ctx := context.Background()
@@ -133,11 +159,11 @@ func main() {
 	}
 }
 
-// run prints the named report (or each report in the summary).
+// run prints the named report (or each report in a group).
 func run(ctx context.Context, conn *pgx.Conn, w io.Writer, name string, o options) error {
 	names := []string{name}
-	if name == "summary" {
-		names = summary
+	if group, ok := groups[name]; ok {
+		names = group
 	} else if _, ok := reports[name]; !ok {
 		return fmt.Errorf("unknown report %q; try one of: %s", name, strings.Join(reportNames(), ", "))
 	}
@@ -148,8 +174,12 @@ func run(ctx context.Context, conn *pgx.Conn, w io.Writer, name string, o option
 				fmt.Fprintln(w)
 			}
 			r := reports[n]
-			fmt.Fprintf(w, "%s, last %d days (%s)\n", r.title, o.days, o.tz)
-			rows, err := tx.Query(ctx, r.sql, o.days)
+			if r.heading != nil {
+				fmt.Fprintln(w, r.heading(o))
+			} else {
+				fmt.Fprintf(w, "%s, last %d days (%s)\n", r.title, o.days, o.tz)
+			}
+			rows, err := tx.Query(ctx, r.sql, pgx.NamedArgs{"days": o.days, "year": o.year})
 			if err != nil {
 				return fmt.Errorf("%s: %w", n, err)
 			}
