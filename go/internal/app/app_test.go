@@ -62,7 +62,7 @@ func TestRateValidatesInput(t *testing.T) {
 		want  error
 	}{
 		{"nope", 8, domain.ErrInvalidMovieID},
-		{"2025-01", 7, domain.ErrInvalidRating},
+		{"2025-01", 11, domain.ErrInvalidRating},
 		{"2025-30", 8, domain.ErrMovieNotFound},
 	}
 	for _, tc := range cases {

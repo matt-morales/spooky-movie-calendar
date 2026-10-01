@@ -189,6 +189,16 @@ func TestMovieExists(t *testing.T) {
 	}
 }
 
+func TestHalfDropRatings(t *testing.T) {
+	s, _ := newStore(t)
+	must(t, s.SaveRating(ctx, "2025-01", "v1", 7, at)) // 3½ drops
+	must(t, s.SaveRating(ctx, "2025-01", "v2", 1, at)) // ½ drop
+	r, err := s.RatingSummary(ctx, "2025-01", "v1")
+	if err != nil || r.Mine == nil || *r.Mine != 7 || r.Average != 4 {
+		t.Errorf("summary = %+v, %v", r, err)
+	}
+}
+
 func TestRatings(t *testing.T) {
 	s, _ := newStore(t)
 

@@ -131,6 +131,9 @@ func parsePage(body []byte, year int) (ratings []rating, skipped int, next strin
 		v, err2 := strconv.Atoi(d.Fields["value"].IntegerValue)
 		movie, err3 := domain.ParseMovieID(string(domain.NewMovieID(year, day)))
 		val, err4 := domain.ParseRating(v)
+		if v%2 != 0 { // the old site only stored whole drops (2, 4, … 10)
+			err4 = domain.ErrInvalidRating
+		}
 		user := d.Fields["userId"].StringValue
 		if err1 != nil || err2 != nil || err3 != nil || err4 != nil || user == "" {
 			skipped++

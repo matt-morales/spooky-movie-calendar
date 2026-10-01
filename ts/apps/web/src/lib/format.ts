@@ -28,9 +28,11 @@ export function monthLabel(movies: ReadonlyArray<{ date: string }>): string {
   return `${month} ${year}`;
 }
 
-/** Ratings are stored 2–10 and shown as 1–5 blood drops. */
-export function averageDrops(average: number): string {
-  return (average / 2).toFixed(1);
+/** A 1–10 rating in blood drops, with halves: 7 → "3½ drops", 1 → "½ drop". */
+export function dropsLabel(value: number): string {
+  const whole = Math.floor(value / 2);
+  const amount = `${whole || ""}${value % 2 ? "½" : ""}`;
+  return `${amount} ${value <= 2 ? "drop" : "drops"}`;
 }
 
 /** "2025-10-01" → { month: "Oct", day: "01" } for the card's date column. */
@@ -39,9 +41,9 @@ export function calendarDate(iso: string): { month: string; day: string } {
   return { month: month.slice(0, 3), day: String(day).padStart(2, "0") };
 }
 
-/** A 2–10 average as a score out of ten: 8 → "8", 7.25 → "7.3". */
-export function outOfTen(average: number): string {
-  return String(Number(average.toFixed(1)));
+/** A 1–10 average as blood drops out of five: 8 → "4", 7 → "3.5". */
+export function outOfFive(average: number): string {
+  return String(Number((average / 2).toFixed(1)));
 }
 
 /** The visitor's local calendar day, in the same form as Movie.date. */

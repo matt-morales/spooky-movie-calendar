@@ -1,5 +1,5 @@
 import type { Movie } from "../lib/api";
-import { calendarDate, letterboxdLink, nightLabel, outOfTen } from "../lib/format";
+import { calendarDate, letterboxdLink, nightLabel, outOfFive } from "../lib/format";
 import { useAppState, useDispatch, useServices } from "../state/AppState";
 import { watchedToggled } from "../state/events";
 import { isWatched, selectRating } from "../state/reducer";
@@ -67,7 +67,7 @@ export default function MovieTile({ movie, headingId, onOpen, onAddReview }: Pro
             <DropIcon className="tile-score-drop" />
             {summary && summary.count > 0 ? (
               <>
-                <strong>{outOfTen(summary.average)}/10</strong>
+                <strong>{outOfFive(summary.average)}/5</strong>
                 <span className="tile-score-count">
                   ({summary.count} {summary.count === 1 ? "rating" : "ratings"})
                 </span>
