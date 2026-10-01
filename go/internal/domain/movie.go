@@ -14,7 +14,7 @@ var (
 	ErrInvalidMovieID = errors.New("invalid movie id")
 	ErrMovieNotFound  = errors.New("movie not found")
 	ErrLineupNotFound = errors.New("lineup not found")
-	ErrInvalidRating  = errors.New("rating must be 2, 4, 6, 8 or 10")
+	ErrInvalidRating  = errors.New("rating must be a whole number from 1 to 10")
 )
 
 // MovieID is "<year>-<day>", e.g. "2025-07". It is stable across years, so
@@ -58,18 +58,19 @@ type Lineup struct {
 	LetterboxdListURL string // the list the lineup is published as; "" if none
 }
 
-// RatingValue is stored on a 2–10 scale and shown as 1–5 blood drops.
+// RatingValue is stored on a 1–10 scale and shown as ½–5 blood drops, so
+// odd values are half drops (7 is 3½).
 type RatingValue int
 
 func ParseRating(v int) (RatingValue, error) {
-	if v < 2 || v > 10 || v%2 != 0 {
+	if v < 1 || v > 10 {
 		return 0, ErrInvalidRating
 	}
 	return RatingValue(v), nil
 }
 
 type RatingSummary struct {
-	Average float64 // on the 2–10 scale; 0 when Count is 0
+	Average float64 // on the 1–10 scale; 0 when Count is 0
 	Count   int
 	Mine    *RatingValue // the viewer's own rating, if any
 }

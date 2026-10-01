@@ -139,6 +139,30 @@
   gap: var(--space-md);
 }
 
+/* The community score, then the visitor's own drops. */
+.tile-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-xl);
+}
+
+.tile-mine {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.tile-mine-label,
+.tile-mine-status {
+  font-size: 0.8em;
+  color: var(--text-faint);
+}
+
+.tile-mine-status.is-error {
+  color: var(--accent);
+}
+
 .tile-score {
   display: inline-flex;
   align-items: center;

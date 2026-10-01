@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { averageDrops, calendarDate, letterboxdLink, localIsoDate, monthLabel, nightLabel, outOfTen } from "./format";
+import { calendarDate, dropsLabel, letterboxdLink, localIsoDate, monthLabel, nightLabel, outOfFive } from "./format";
 
 describe("nightLabel", () => {
   it.each([
@@ -28,11 +28,12 @@ describe("monthLabel", () => {
   });
 });
 
-describe("averageDrops", () => {
-  it("converts the 2–10 scale to drops with one decimal", () => {
-    expect(averageDrops(7)).toBe("3.5");
-    expect(averageDrops(8)).toBe("4.0");
-    expect(averageDrops(6.666)).toBe("3.3");
+describe("dropsLabel", () => {
+  it("names a 1–10 rating in drops, with halves", () => {
+    expect(dropsLabel(1)).toBe("½ drop");
+    expect(dropsLabel(2)).toBe("1 drop");
+    expect(dropsLabel(7)).toBe("3½ drops");
+    expect(dropsLabel(10)).toBe("5 drops");
   });
 });
 
@@ -43,11 +44,11 @@ describe("calendarDate", () => {
   });
 });
 
-describe("outOfTen", () => {
-  it("drops a trailing .0", () => {
-    expect(outOfTen(8)).toBe("8");
-    expect(outOfTen(7.25)).toBe("7.3");
-    expect(outOfTen(6.666)).toBe("6.7");
+describe("outOfFive", () => {
+  it("turns a 1–10 average into drops out of five, dropping a trailing .0", () => {
+    expect(outOfFive(8)).toBe("4");
+    expect(outOfFive(7)).toBe("3.5");
+    expect(outOfFive(6.666)).toBe("3.3");
   });
 });
 

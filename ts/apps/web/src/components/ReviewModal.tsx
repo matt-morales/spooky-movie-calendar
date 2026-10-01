@@ -4,7 +4,7 @@ import type { Movie } from "../lib/api";
 import { nightLabel } from "../lib/format";
 import { CloseIcon } from "./icons";
 import Modal from "./Modal";
-import RatingDrops from "./RatingDrops";
+import RatingDrops, { useRatingStatus } from "./RatingDrops";
 import "./ReviewModal.css";
 
 interface Props {
@@ -19,6 +19,8 @@ export default function ReviewModal({ movie, onPost, onClose }: Props) {
   // Mounted only while the modal is open, so the page doesn't load a
   // Turnstile widget per movie up front.
   const turnstile = useTurnstile(import.meta.env.VITE_TURNSTILE_SITE_KEY);
+  // The rating saves on its own, with or without a written review.
+  const rating = useRatingStatus(movie.id);
 
   const submit = async (body: string, authorName: string) => {
     const turnstileToken = await turnstile.getToken();
@@ -45,7 +47,10 @@ export default function ReviewModal({ movie, onPost, onClose }: Props) {
 
       <div className="review-rating">
         <span className="review-label">Your rating</span>
-        <RatingDrops movieId={movie.id} />
+        <p role="status" className={`review-rating-status${rating.isError ? " is-error" : ""}`}>
+          {rating.status}
+        </p>
+        <RatingDrops movieId={movie.id} onRate={rating.rated} />
       </div>
 
       <CommentForm label="Your review" submitLabel="Post review" showName onSubmit={submit} onCancel={onClose} />

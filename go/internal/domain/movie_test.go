@@ -27,12 +27,13 @@ func TestParseMovieID(t *testing.T) {
 }
 
 func TestParseRating(t *testing.T) {
-	for _, v := range []int{2, 4, 6, 8, 10} {
+	// 1–10, so half drops work: 1 is ½ drop, 7 is 3½ drops.
+	for _, v := range []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10} {
 		if got, err := domain.ParseRating(v); err != nil || int(got) != v {
 			t.Errorf("ParseRating(%d) = %v, %v", v, got, err)
 		}
 	}
-	for _, v := range []int{0, 1, 3, 11, -2, 12} {
+	for _, v := range []int{0, 11, -1, -2, 12} {
 		if _, err := domain.ParseRating(v); !errors.Is(err, domain.ErrInvalidRating) {
 			t.Errorf("ParseRating(%d) = %v, want ErrInvalidRating", v, err)
 		}
@@ -40,7 +41,7 @@ func TestParseRating(t *testing.T) {
 }
 
 func TestRatingDrops(t *testing.T) {
-	// Stored on a 2–10 scale, shown as 1–5 blood drops.
+	// Stored on a 1–10 scale, shown as ½–5 blood drops.
 	s := domain.RatingSummary{Average: 7, Count: 3}
 	if s.AverageDrops() != 3.5 {
 		t.Errorf("AverageDrops = %v, want 3.5", s.AverageDrops())

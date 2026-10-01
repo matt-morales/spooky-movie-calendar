@@ -54,6 +54,19 @@
   border-radius: var(--radius-md);
 }
 
+/* "Rating saved", between the label and the drops. */
+.review-rating-status {
+  flex: 1;
+  margin: 0;
+  font-size: 0.85em;
+  color: var(--text-faint);
+  text-align: right;
+}
+
+.review-rating-status.is-error {
+  color: var(--accent);
+}
+
 .review-label,
 .review-modal .cmt-label {
   font-family: var(--font-display);
@@ -104,4 +117,24 @@
 
 .review-modal .cmt-button--quiet {
   border-color: var(--border-control);
+}
+
+/* Phones: the label and drops share the row; the status goes underneath. */
+@media (max-width: 480px) {
+  .review-rating {
+    flex-wrap: wrap;
+  }
+
+  .review-label {
+    white-space: nowrap;
+  }
+
+  .review-rating-status {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .review-rating-status:empty {
+    display: none;
+  }
 }

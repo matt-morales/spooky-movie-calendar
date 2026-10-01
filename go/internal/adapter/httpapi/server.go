@@ -68,7 +68,7 @@ func NewServer(cfg Config) http.Handler {
 }
 
 type ratingJSON struct {
-	Average float64 `json:"average"` // 2–10 scale
+	Average float64 `json:"average"` // 1–10 scale
 	Count   int     `json:"count"`
 	Mine    *int    `json:"mine"`
 }

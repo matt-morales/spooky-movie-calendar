@@ -3,34 +3,100 @@
   gap: 2px;
 }
 
-.drop-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
+/* One drop: a grey drop with a red one on top, clipped to show none, the
+   left half or all of it. Two invisible buttons cover its halves. */
+.drop {
+  position: relative;
+  display: inline-grid;
   padding: var(--space-xs);
   line-height: 0;
-  border-radius: var(--radius-sm);
 }
 
-.drop-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+.drop > .blood-drop {
+  grid-area: 1 / 1;
 }
 
 .blood-drop {
   width: 18px;
   height: 28px;
   fill: var(--icon-inactive);
-  transition:
-    fill var(--speed-normal) ease,
-    transform 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
-.drop-btn.active .blood-drop {
+.blood-drop-fill {
   fill: var(--accent);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path var(--speed-fast) ease;
+}
+
+.drop.is-half .blood-drop-fill {
+  clip-path: inset(0 50% 0 0);
+}
+
+.drop.is-full .blood-drop-fill {
+  clip-path: inset(0);
+}
+
+.drop.is-full .blood-drop,
+.drop.is-half .blood-drop {
   transform: scale(1.1);
 }
 
-.drop-btn:hover .blood-drop {
-  transform: scale(1.15);
+.drop-half {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.drop-half-left {
+  left: 0;
+}
+
+.drop-half-right {
+  right: 0;
+}
+
+.drop-half:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* Touch screens: bigger drops, so each half is a comfortable tap target. */
+@media (pointer: coarse) {
+  .drop {
+    padding: 6px;
+  }
+
+  .blood-drop {
+    width: 24px;
+    height: 36px;
+  }
+}
+
+/* Compact drops, on the movie card. */
+.drops-small .drop {
+  padding: 3px;
+}
+
+.drops-small .blood-drop {
+  width: 14px;
+  height: 22px;
+}
+
+/* Touch screens: full size, so each half stays easy to tap. */
+@media (pointer: coarse) {
+  .drops-small .drop {
+    padding: 6px;
+  }
+
+  .drops-small .blood-drop {
+    width: 24px;
+    height: 36px;
+  }
 }

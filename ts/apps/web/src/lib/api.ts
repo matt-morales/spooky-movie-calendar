@@ -2,7 +2,7 @@
 // production a Cloudflare Pages Function proxies /api/* to Cloud Run.
 
 export interface RatingSummary {
-  average: number; // 2–10 scale
+  average: number; // 1–10 scale (shown as drops out of 5)
   count: number;
   mine: number | null;
 }

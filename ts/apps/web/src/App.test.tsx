@@ -85,7 +85,7 @@ describe("App", () => {
     expect(api.lineup).toHaveBeenCalledWith(2025);
     expect(within(card).getByText("October 1st")).toBeInTheDocument();
     expect(within(card).getByText("John Carpenter")).toBeInTheDocument();
-    expect(within(card).getByText("7/10")).toBeInTheDocument();
+    expect(within(card).getByText("3.5/5")).toBeInTheDocument();
     expect(within(card).getByText("(2 ratings)")).toBeInTheDocument();
     expect(screen.getByText("October 2025")).toBeInTheDocument();
   });
@@ -151,6 +151,49 @@ describe("App", () => {
     expect(JSON.parse(localStorage.getItem("watched_movies")!)).toEqual(["2025-01"]);
   });
 
+  it("rates in half drops", async () => {
+    const user = userEvent.setup();
+    const { api } = setup();
+    const card = await cardFor("Christine");
+
+    await user.click(within(card).getByRole("button", { name: "Add your review" }));
+    const modal = screen.getByRole("dialog", { name: "Review Christine" });
+    await user.click(within(modal).getByRole("button", { name: "Rate 3½ drops" }));
+
+    expect(api.rate).toHaveBeenCalledWith("2025-01", 7);
+    expect(within(modal).getByRole("button", { name: "Rate 3½ drops" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(modal).getByRole("button", { name: "Rate 4 drops" })).toHaveAttribute("aria-pressed", "false");
+    expect(within(modal).getAllByRole("button", { name: /^Rate / })).toHaveLength(10);
+  });
+
+  it("rates straight from the card, without opening anything", async () => {
+    const user = userEvent.setup();
+    const { api } = setup();
+    const card = await cardFor("Christine");
+
+    await user.click(within(card).getByRole("button", { name: "Rate 2½ drops" }));
+
+    expect(api.rate).toHaveBeenCalledWith("2025-01", 5);
+    expect(within(card).getByRole("button", { name: "Rate 2½ drops" })).toHaveAttribute("aria-pressed", "true");
+    expect(await within(card).findByRole("status")).toHaveTextContent("Rating saved");
+    expect(within(card).getByText("4/5")).toBeInTheDocument(); // the new average from the API
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument(); // the card didn't turn over
+  });
+
+  it("says when a rating couldn't be saved", async () => {
+    const user = userEvent.setup();
+    setup({
+      rate: async () => {
+        throw new Error("offline");
+      },
+    });
+    const card = await cardFor("Christine");
+    await user.click(within(card).getByRole("button", { name: "Add your review" }));
+    const modal = screen.getByRole("dialog", { name: "Review Christine" });
+    await user.click(within(modal).getByRole("button", { name: "Rate 2 drops" }));
+    expect(await within(modal).findByRole("status")).toHaveTextContent(/couldn't save/i);
+  });
+
   it("rates and reviews a movie from the review modal", async () => {
     const user = userEvent.setup();
     const { api, comments } = setup();
@@ -161,7 +204,9 @@ describe("App", () => {
 
     await user.click(within(modal).getByRole("button", { name: "Rate 5 drops" }));
     expect(api.rate).toHaveBeenCalledWith("2025-01", 10);
-    expect(await within(card).findByText("8/10")).toBeInTheDocument();
+    expect(await within(card).findByText("4/5")).toBeInTheDocument();
+    // Rating saves on its own, before (or without) a written review, and says so.
+    expect(await within(modal).findByRole("status")).toHaveTextContent("Rating saved");
 
     await user.type(within(modal).getByLabelText("Your name (optional)"), "Arnie");
     await user.type(within(modal).getByLabelText("Your review"), "Never trust a Plymouth Fury.");
