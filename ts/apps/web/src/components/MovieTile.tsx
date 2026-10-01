@@ -4,6 +4,7 @@ import { useAppState, useDispatch, useServices } from "../state/AppState";
 import { watchedToggled } from "../state/events";
 import { isWatched, selectRating } from "../state/reducer";
 import { CheckIcon, DropIcon, EyeIcon, PencilIcon } from "./icons";
+import RatingDrops, { useRatingStatus } from "./RatingDrops";
 import "./MovieTile.css";
 
 interface Props {
@@ -23,6 +24,7 @@ export default function MovieTile({ movie, headingId, onOpen, onAddReview }: Pro
   const watched = isWatched(state, movie.id);
   const { month, day } = calendarDate(movie.date);
   const meta = [movie.directors.join(", "), movie.releaseYear].filter(Boolean);
+  const rating = useRatingStatus(movie.id);
 
   const toggleWatched = () => {
     dispatch(watchedToggled(movie.id));
@@ -63,19 +65,30 @@ export default function MovieTile({ movie, headingId, onOpen, onAddReview }: Pro
         <p className="tile-desc">{movie.description}</p>
 
         <div className="tile-actions">
-          <span className="tile-score">
-            <DropIcon className="tile-score-drop" />
-            {summary && summary.count > 0 ? (
-              <>
-                <strong>{outOfFive(summary.average)}/5</strong>
-                <span className="tile-score-count">
-                  ({summary.count} {summary.count === 1 ? "rating" : "ratings"})
-                </span>
-              </>
-            ) : (
-              <span className="tile-score-count">Not rated yet</span>
-            )}
-          </span>
+          <div className="tile-rating">
+            <span className="tile-score">
+              <DropIcon className="tile-score-drop" />
+              {summary && summary.count > 0 ? (
+                <>
+                  <strong>{outOfFive(summary.average)}/5</strong>
+                  <span className="tile-score-count">
+                    ({summary.count} {summary.count === 1 ? "rating" : "ratings"})
+                  </span>
+                </>
+              ) : (
+                <span className="tile-score-count">Not rated yet</span>
+              )}
+            </span>
+
+            {/* Rate right here; the review form is only needed to write a review. */}
+            <span className="tile-mine">
+              <span className="tile-mine-label">Your rating</span>
+              <RatingDrops movieId={movie.id} onRate={rating.rated} small />
+              <span role="status" className={`tile-mine-status${rating.isError ? " is-error" : ""}`}>
+                {rating.status}
+              </span>
+            </span>
+          </div>
 
           {/* Their own row, under the score. */}
           <div className="tile-buttons">

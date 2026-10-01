@@ -1,12 +1,10 @@
 import { CommentForm, useTurnstile, type PostArgs } from "@spooky/comment";
-import { useId, useState } from "react";
+import { useId } from "react";
 import type { Movie } from "../lib/api";
 import { nightLabel } from "../lib/format";
-import { useAppState } from "../state/AppState";
-import { selectRating } from "../state/reducer";
 import { CloseIcon } from "./icons";
 import Modal from "./Modal";
-import RatingDrops from "./RatingDrops";
+import RatingDrops, { useRatingStatus } from "./RatingDrops";
 import "./ReviewModal.css";
 
 interface Props {
@@ -21,19 +19,8 @@ export default function ReviewModal({ movie, onPost, onClose }: Props) {
   // Mounted only while the modal is open, so the page doesn't load a
   // Turnstile widget per movie up front.
   const turnstile = useTurnstile(import.meta.env.VITE_TURNSTILE_SITE_KEY);
-  // A rating saves as soon as a drop is picked, with or without a review, so
-  // say so once the visitor rates here.
-  const [rated, setRated] = useState(false);
-  const { mine, saving, error } = selectRating(useAppState(), movie.id);
-  const status = !rated
-    ? ""
-    : saving
-      ? "Saving…"
-      : error
-        ? "Couldn't save your rating. Try again."
-        : mine
-          ? "Rating saved"
-          : "";
+  // The rating saves on its own, with or without a written review.
+  const rating = useRatingStatus(movie.id);
 
   const submit = async (body: string, authorName: string) => {
     const turnstileToken = await turnstile.getToken();
@@ -60,10 +47,10 @@ export default function ReviewModal({ movie, onPost, onClose }: Props) {
 
       <div className="review-rating">
         <span className="review-label">Your rating</span>
-        <p role="status" className={`review-rating-status${error ? " is-error" : ""}`}>
-          {status}
+        <p role="status" className={`review-rating-status${rating.isError ? " is-error" : ""}`}>
+          {rating.status}
         </p>
-        <RatingDrops movieId={movie.id} onRate={() => setRated(true)} />
+        <RatingDrops movieId={movie.id} onRate={rating.rated} />
       </div>
 
       <CommentForm label="Your review" submitLabel="Post review" showName onSubmit={submit} onCancel={onClose} />

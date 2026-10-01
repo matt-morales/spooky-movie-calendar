@@ -13,7 +13,15 @@ const DROPS = [1, 2, 3, 4, 5];
  * as 1–10. Each drop has two buttons, its left half and its right half.
  * Hovering previews the rating before it's picked.
  */
-export default function RatingDrops({ movieId, onRate }: { movieId: string; onRate?: () => void }) {
+export default function RatingDrops({
+  movieId,
+  onRate,
+  small = false,
+}: {
+  movieId: string;
+  onRate?: () => void;
+  small?: boolean; // the card's compact drops
+}) {
   const state = useAppState();
   const dispatch = useDispatch();
   const { api } = useServices();
@@ -27,7 +35,12 @@ export default function RatingDrops({ movieId, onRate }: { movieId: string; onRa
   const shown = hover ?? mine ?? 0;
 
   return (
-    <div className="drops" role="group" aria-label="Your rating" onMouseLeave={() => setHover(null)}>
+    <div
+      className={`drops${small ? " drops-small" : ""}`}
+      role="group"
+      aria-label="Your rating"
+      onMouseLeave={() => setHover(null)}
+    >
       {DROPS.map((n) => {
         const fill = shown >= n * 2 ? "full" : shown === n * 2 - 1 ? "half" : "empty";
         return (
@@ -52,4 +65,24 @@ export default function RatingDrops({ movieId, onRate }: { movieId: string; onRa
       })}
     </div>
   );
+}
+
+/**
+ * What to tell the visitor about their rating: "Saving…", "Rating saved" or
+ * an error. Ratings save as soon as a drop is picked, so this says so, but
+ * only once they've rated here (call `rated`), not for an earlier rating.
+ */
+export function useRatingStatus(movieId: string): { status: string; isError: boolean; rated(): void } {
+  const [touched, setTouched] = useState(false);
+  const { mine, saving, error } = selectRating(useAppState(), movieId);
+  const status = !touched
+    ? ""
+    : saving
+      ? "Saving…"
+      : error
+        ? "Couldn't save your rating. Try again."
+        : mine
+          ? "Rating saved"
+          : "";
+  return { status, isError: touched && !saving && !!error, rated: () => setTouched(true) };
 }

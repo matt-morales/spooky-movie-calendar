@@ -78,3 +78,25 @@
     height: 36px;
   }
 }
+
+/* Compact drops, on the movie card. */
+.drops-small .drop {
+  padding: 3px;
+}
+
+.drops-small .blood-drop {
+  width: 14px;
+  height: 22px;
+}
+
+/* Touch screens: full size, so each half stays easy to tap. */
+@media (pointer: coarse) {
+  .drops-small .drop {
+    padding: 6px;
+  }
+
+  .drops-small .blood-drop {
+    width: 24px;
+    height: 36px;
+  }
+}

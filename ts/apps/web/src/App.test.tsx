@@ -166,6 +166,20 @@ describe("App", () => {
     expect(within(modal).getAllByRole("button", { name: /^Rate / })).toHaveLength(10);
   });
 
+  it("rates straight from the card, without opening anything", async () => {
+    const user = userEvent.setup();
+    const { api } = setup();
+    const card = await cardFor("Christine");
+
+    await user.click(within(card).getByRole("button", { name: "Rate 2½ drops" }));
+
+    expect(api.rate).toHaveBeenCalledWith("2025-01", 5);
+    expect(within(card).getByRole("button", { name: "Rate 2½ drops" })).toHaveAttribute("aria-pressed", "true");
+    expect(await within(card).findByRole("status")).toHaveTextContent("Rating saved");
+    expect(within(card).getByText("4/5")).toBeInTheDocument(); // the new average from the API
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument(); // the card didn't turn over
+  });
+
   it("says when a rating couldn't be saved", async () => {
     const user = userEvent.setup();
     setup({
