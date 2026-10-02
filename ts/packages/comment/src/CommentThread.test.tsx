@@ -86,6 +86,7 @@ describe("CommentThread", () => {
 
     const parent = await screen.findByRole("article", { name: /Nancy/ });
     await user.click(within(parent).getByRole("button", { name: "Reply" }));
+    expect(within(parent).getByLabelText("Reply")).toHaveFocus(); // ready to type
     await user.type(within(parent).getByLabelText("Reply"), "Child");
     await user.click(within(parent).getByRole("button", { name: "Post reply" }));
 

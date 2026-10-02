@@ -19,7 +19,7 @@ func Run(t *testing.T, newStore func(t *testing.T) comment.Store) {
 	t.Run("CountByAuthorSince", func(t *testing.T) { countByAuthor(t, newStore(t)) })
 	t.Run("SetStatus", func(t *testing.T) { setStatus(t, newStore(t)) })
 	t.Run("Reactions", func(t *testing.T) { reactions(t, newStore(t)) })
-	t.Run("CountVisible", func(t *testing.T) { countVisible(t, newStore(t)) })
+	t.Run("CountTopLevel", func(t *testing.T) { countTopLevel(t, newStore(t)) })
 }
 
 var base = time.Date(2025, 10, 1, 20, 0, 0, 0, time.UTC)
@@ -172,10 +172,11 @@ func reactions(t *testing.T, s comment.Store) {
 	}
 }
 
-func countVisible(t *testing.T, s comment.Store) {
+func countTopLevel(t *testing.T, s comment.Store) {
 	ctx := context.Background()
+	root := insert(t, s, comment.Comment{ThreadKey: "movie:2025-01"})
 	insert(t, s, comment.Comment{ThreadKey: "movie:2025-01"})
-	insert(t, s, comment.Comment{ThreadKey: "movie:2025-01"})
+	insert(t, s, comment.Comment{ThreadKey: "movie:2025-01", ParentID: root.ID, Depth: 1}) // a reply: not counted
 	hidden := insert(t, s, comment.Comment{ThreadKey: "movie:2025-01"})
 	insert(t, s, comment.Comment{ThreadKey: "movie:2025-02"})
 	insert(t, s, comment.Comment{ThreadKey: "movie:2025-09"}) // not asked for
@@ -183,12 +184,12 @@ func countVisible(t *testing.T, s comment.Store) {
 		t.Fatal(err)
 	}
 
-	got, err := s.CountVisible(ctx, []string{"movie:2025-01", "movie:2025-02", "movie:2025-03"})
+	got, err := s.CountTopLevel(ctx, []string{"movie:2025-01", "movie:2025-02", "movie:2025-03"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got["movie:2025-01"] != 2 || got["movie:2025-02"] != 1 || got["movie:2025-03"] != 0 || len(got) > 3 {
-		t.Errorf("CountVisible = %v", got)
+		t.Errorf("CountTopLevel = %v", got)
 	}
 }
 

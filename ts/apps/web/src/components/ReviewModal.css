@@ -67,8 +67,7 @@
   color: var(--accent);
 }
 
-.review-label,
-.review-modal .cmt-label {
+.review-label {
   font-family: var(--font-display);
   font-size: 1.05em;
   letter-spacing: 0.12em;
@@ -76,47 +75,9 @@
   color: var(--text-muted);
 }
 
-/* The comment package's form, dressed to match the app */
-.review-modal .cmt-form {
-  gap: var(--space-sm);
-}
-
-.review-modal .cmt-label {
-  margin-top: var(--space-sm);
-}
-
-.review-modal .cmt-input,
-.review-modal .cmt-textarea {
-  padding: 10px var(--space-md);
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--border-faint);
-  border-radius: var(--radius-md);
-  transition: border-color var(--speed-fast) ease;
-}
-
+/* The form itself is styled in styles/comments.css, shared with replies. */
 .review-modal .cmt-textarea {
   min-height: 8em;
-}
-
-.review-modal .cmt-input:focus-visible,
-.review-modal .cmt-textarea:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-
-.review-modal .cmt-actions {
-  margin-top: var(--space-md);
-}
-
-.review-modal .cmt-button {
-  min-height: 38px;
-  padding: 0 var(--space-xl);
-  font-size: 0.875em;
-}
-
-.review-modal .cmt-button--quiet {
-  border-color: var(--border-control);
 }
 
 /* Phones: the label and drops share the row; the status goes underneath. */

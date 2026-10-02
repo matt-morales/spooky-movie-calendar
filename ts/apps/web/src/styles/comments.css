@@ -1,0 +1,88 @@
+/* ===========================
+   comments.css: the comment package's form and list, dressed to match the
+   site. Shared by the review form (ReviewModal) and the reviews view, where
+   replies are written inline (MovieDetail).
+   =========================== */
+
+:is(.review-modal, .detail-reviews) .cmt-label {
+  margin-top: var(--space-sm);
+  font-family: var(--font-display);
+  font-size: 1.05em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+:is(.review-modal, .detail-reviews) .cmt-form {
+  gap: var(--space-sm);
+}
+
+:is(.review-modal, .detail-reviews) .cmt-input,
+:is(.review-modal, .detail-reviews) .cmt-textarea {
+  padding: 10px var(--space-md);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-faint);
+  border-radius: var(--radius-md);
+  transition: border-color var(--speed-fast) ease;
+}
+
+:is(.review-modal, .detail-reviews) .cmt-input:focus-visible,
+:is(.review-modal, .detail-reviews) .cmt-textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+:is(.review-modal, .detail-reviews) .cmt-form .cmt-actions {
+  margin-top: var(--space-md);
+}
+
+:is(.review-modal, .detail-reviews) .cmt-button {
+  min-height: 38px;
+  padding: 0 var(--space-xl);
+  font-size: 0.875em;
+}
+
+:is(.review-modal, .detail-reviews) .cmt-button--quiet {
+  border-color: var(--border-control);
+}
+
+/* Reply and Delete: quiet text that turns red on hover, like "3 reviews". */
+.detail-reviews .cmt-link {
+  font-size: 0.8em;
+  color: var(--text-faint);
+  text-decoration: none;
+  transition: color var(--speed-fast) ease;
+}
+
+.detail-reviews .cmt-link:hover,
+.detail-reviews .cmt-link[aria-expanded="true"] {
+  color: var(--accent);
+}
+
+.detail-reviews .cmt-item-actions {
+  gap: var(--space-lg);
+}
+
+/* Replies sit inside their review: indented on a faint line, without the
+   card and red edge that mark a review. */
+.detail-reviews .cmt-replies {
+  margin-top: var(--space-md);
+  padding-left: var(--space-lg);
+  border-left: 1px solid var(--border-faint);
+  gap: var(--space-md);
+}
+
+.detail-reviews .cmt-replies .cmt-item {
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Writing a reply, under the review it answers. */
+.detail-reviews .cmt-item > .cmt-form {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}

@@ -136,12 +136,12 @@ func (s *Store) ListReactions(_ context.Context, ids []comment.ID) ([]comment.Re
 	return out, nil
 }
 
-func (s *Store) CountVisible(_ context.Context, threadKeys []string) (map[string]int, error) {
+func (s *Store) CountTopLevel(_ context.Context, threadKeys []string) (map[string]int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	out := map[string]int{}
 	for _, c := range s.byID {
-		if c.Status == comment.StatusVisible && slices.Contains(threadKeys, c.ThreadKey) {
+		if c.Status == comment.StatusVisible && c.ParentID == 0 && slices.Contains(threadKeys, c.ThreadKey) {
 			out[c.ThreadKey]++
 		}
 	}

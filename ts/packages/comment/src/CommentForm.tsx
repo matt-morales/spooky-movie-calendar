@@ -15,6 +15,8 @@ interface Props {
   showName: boolean;
   onSubmit(body: string, authorName: string): Promise<void>;
   onCancel?(): void;
+  /** Put the cursor in the text box straight away, e.g. after "Reply". */
+  autoFocus?: boolean;
 }
 
 // The ":query" being completed: where it starts and what it matches.
@@ -24,7 +26,7 @@ interface Suggesting {
   active: number;
 }
 
-export function CommentForm({ label, submitLabel, showName, onSubmit, onCancel }: Props) {
+export function CommentForm({ label, submitLabel, showName, onSubmit, onCancel, autoFocus = false }: Props) {
   const [body, setBody] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -159,6 +161,7 @@ export function CommentForm({ label, submitLabel, showName, onSubmit, onCancel }
           value={body}
           maxLength={MAX_BODY}
           rows={3}
+          autoFocus={autoFocus}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onFocus={() => void loadEmoji().then(setEmoji)}

@@ -146,8 +146,8 @@ func (s *Store) ListReactions(ctx context.Context, ids []comment.ID) ([]comment.
 	return out, nil
 }
 
-func (s *Store) CountVisible(ctx context.Context, threadKeys []string) (map[string]int, error) {
-	rows, err := s.q.CountVisibleByThread(ctx, threadKeys)
+func (s *Store) CountTopLevel(ctx context.Context, threadKeys []string) (map[string]int, error) {
+	rows, err := s.q.CountTopLevelByThread(ctx, threadKeys)
 	if err != nil {
 		return nil, err
 	}

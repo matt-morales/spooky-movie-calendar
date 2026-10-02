@@ -28,9 +28,9 @@ type Store interface {
 	RemoveReaction(ctx context.Context, id ID, authorID, emoji string) error
 	// ListReactions returns the reactions to these comments, oldest first.
 	ListReactions(ctx context.Context, ids []ID) ([]ReactionRow, error)
-	// CountVisible returns how many visible comments each thread has.
-	// Threads with none may be missing from the map.
-	CountVisible(ctx context.Context, threadKeys []string) (map[string]int, error)
+	// CountTopLevel returns how many visible top-level comments (not
+	// replies) each thread has. Threads with none may be missing.
+	CountTopLevel(ctx context.Context, threadKeys []string) (map[string]int, error)
 }
 
 // Verifier is the driven port that checks a poster is human (e.g. Turnstile).
@@ -274,15 +274,16 @@ func (s *Service) React(ctx context.Context, id ID, authorID, emoji string, on b
 	return Reactions(rows), nil
 }
 
-// Counts returns how many visible comments each thread has, e.g. to show
-// "3 reviews" without loading the threads. Every key is in the result.
+// Counts returns how many visible top-level comments each thread has, e.g.
+// "3 reviews" (replies aren't counted), without loading the threads. Every
+// key is in the result.
 func (s *Service) Counts(ctx context.Context, threadKeys []string) (map[string]int, error) {
 	for _, k := range threadKeys {
 		if err := ValidateThreadKey(k); err != nil {
 			return nil, err
 		}
 	}
-	counts, err := s.store.CountVisible(ctx, threadKeys)
+	counts, err := s.store.CountTopLevel(ctx, threadKeys)
 	if err != nil {
 		return nil, fmt.Errorf("count comments: %w", err)
 	}

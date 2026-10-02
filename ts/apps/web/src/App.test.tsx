@@ -47,8 +47,8 @@ function setup(api: Partial<Api> = {}) {
       thread: vi.fn(async (): Promise<ThreadPage> => ({ comments: [], nextBefore: 0 })),
       post: vi.fn(async (_key, input) => ({
         id: 7,
-        parentId: 0,
-        depth: 0,
+        parentId: input.parentId,
+        depth: input.parentId ? 1 : 0,
         authorName: input.authorName,
         body: input.body,
         status: "visible" as const,
@@ -288,10 +288,52 @@ describe("App", () => {
     expect(comments.thread).toHaveBeenCalledWith("movie:2025-01", 0);
     const review = await within(detail).findByRole("article", { name: "Comment by Leigh" });
     expect(review).toHaveTextContent("Scared of my own car now.");
-    expect(within(review).queryByRole("button", { name: "Reply" })).not.toBeInTheDocument(); // reviews are flat
 
     await user.click(within(detail).getByRole("button", { name: "Close reviews" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("replies to a review, one level deep, without counting it as a review", async () => {
+    const user = userEvent.setup();
+    const { comments } = setup();
+    vi.mocked(comments.thread).mockResolvedValue({
+      comments: [
+        {
+          id: 3,
+          parentId: 0,
+          depth: 0,
+          authorName: "Leigh",
+          body: "Scared of my own car now.",
+          status: "visible",
+          mine: false,
+          createdAt: "2025-10-01T21:00:00Z",
+          replies: [],
+          reactions: [],
+        },
+      ],
+      nextBefore: 0,
+    });
+    const card = await cardFor("Christine");
+    await user.click(within(card).getByText("Christine description"));
+    const detail = screen.getByRole("dialog", { name: "Christine" });
+    const review = await within(detail).findByRole("article", { name: "Comment by Leigh" });
+
+    await user.click(within(review).getByRole("button", { name: "Reply" }));
+    await user.type(within(review).getByLabelText("Your name (optional)"), "Dennis");
+    await user.type(within(review).getByLabelText("Your reply"), "Same, honestly.");
+    await user.click(within(review).getByRole("button", { name: "Post reply" }));
+
+    expect(comments.post).toHaveBeenCalledWith("movie:2025-01", {
+      body: "Same, honestly.",
+      authorName: "Dennis",
+      parentId: 3,
+      turnstileToken: "",
+    });
+    const reply = await within(review).findByRole("article", { name: "Comment by Dennis" });
+    expect(reply).toHaveTextContent("Same, honestly.");
+    expect(within(reply).queryByRole("button", { name: "Reply" })).not.toBeInTheDocument(); // one level only
+    expect(within(review).queryByLabelText("Your reply")).not.toBeInTheDocument(); // the form closed
+    expect(within(card).queryByRole("button", { name: /^\d+ reviews?$/ })).not.toBeInTheDocument(); // still no reviews
   });
 
   it("doesn't turn the card over for its own buttons", async () => {

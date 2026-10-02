@@ -1,4 +1,4 @@
-import { useCommentThread } from "@spooky/comment";
+import { useCommentThread, type Comment } from "@spooky/comment";
 import { useCallback, useId, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { Movie } from "../lib/api";
 import { useServices } from "../state/AppState";
@@ -18,7 +18,8 @@ export default function MovieCard({ movie }: { movie: Movie }) {
   // page doesn't fetch 31 threads up front. A review posted from the modal is
   // added straight away either way, and the card's count follows along.
   const [reviewCount, setReviewCount] = useState(movie.reviewCount);
-  const counted = useCallback(() => setReviewCount((n) => n + 1), []);
+  // Only reviews count, not replies to them.
+  const counted = useCallback((c: Comment) => !c.parentId && setReviewCount((n) => n + 1), []);
   const thread = useCommentThread(`movie:${movie.id}`, {
     client: comments,
     enabled: origin !== null,
@@ -28,8 +29,9 @@ export default function MovieCard({ movie }: { movie: Movie }) {
     () => ({
       ...thread,
       remove: async (id: number) => {
+        const isReview = thread.comments.some((c) => c.id === id); // top level, not a reply
         await thread.remove(id);
-        setReviewCount((n) => Math.max(0, n - 1));
+        if (isReview) setReviewCount((n) => Math.max(0, n - 1));
       },
     }),
     [thread],

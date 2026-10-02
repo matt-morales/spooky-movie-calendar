@@ -40,8 +40,8 @@ SELECT * FROM comment_reactions
 WHERE comment_id = ANY(sqlc.arg(ids)::bigint[])
 ORDER BY created_at, comment_id, emoji, author_id;
 
--- name: CountVisibleByThread :many
+-- name: CountTopLevelByThread :many
 SELECT thread_key, count(*) AS count
 FROM comments
-WHERE thread_key = ANY(sqlc.arg(thread_keys)::text[]) AND status = 'visible'
+WHERE thread_key = ANY(sqlc.arg(thread_keys)::text[]) AND status = 'visible' AND parent_id IS NULL
 GROUP BY thread_key;

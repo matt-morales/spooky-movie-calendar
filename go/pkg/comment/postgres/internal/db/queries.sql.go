@@ -49,27 +49,27 @@ func (q *Queries) CountCommentsByAuthorSince(ctx context.Context, arg CountComme
 	return count, err
 }
 
-const countVisibleByThread = `-- name: CountVisibleByThread :many
+const countTopLevelByThread = `-- name: CountTopLevelByThread :many
 SELECT thread_key, count(*) AS count
 FROM comments
-WHERE thread_key = ANY($1::text[]) AND status = 'visible'
+WHERE thread_key = ANY($1::text[]) AND status = 'visible' AND parent_id IS NULL
 GROUP BY thread_key
 `
 
-type CountVisibleByThreadRow struct {
+type CountTopLevelByThreadRow struct {
 	ThreadKey string
 	Count     int64
 }
 
-func (q *Queries) CountVisibleByThread(ctx context.Context, threadKeys []string) ([]CountVisibleByThreadRow, error) {
-	rows, err := q.db.Query(ctx, countVisibleByThread, threadKeys)
+func (q *Queries) CountTopLevelByThread(ctx context.Context, threadKeys []string) ([]CountTopLevelByThreadRow, error) {
+	rows, err := q.db.Query(ctx, countTopLevelByThread, threadKeys)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []CountVisibleByThreadRow
+	var items []CountTopLevelByThreadRow
 	for rows.Next() {
-		var i CountVisibleByThreadRow
+		var i CountTopLevelByThreadRow
 		if err := rows.Scan(&i.ThreadKey, &i.Count); err != nil {
 			return nil, err
 		}

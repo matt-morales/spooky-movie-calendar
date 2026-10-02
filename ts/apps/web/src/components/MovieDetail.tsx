@@ -1,4 +1,4 @@
-import { CommentList, type useCommentThread } from "@spooky/comment";
+import { CommentList, useTurnstile, type useCommentThread } from "@spooky/comment";
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import type { Movie } from "../lib/api";
@@ -40,6 +40,12 @@ export default function MovieDetail({ movie, origin, reviews, onAddReview, onClo
   const onClosedRef = useRef(onClosed);
   onClosedRef.current = onClosed;
   useScrollLock();
+  // Replies are posted from here, and need the same human check as reviews.
+  const turnstile = useTurnstile(import.meta.env.VITE_TURNSTILE_SITE_KEY);
+  const reply = async (body: string, authorName: string, parentId: number) => {
+    const turnstileToken = await turnstile.getToken();
+    await reviews.post({ body, authorName, parentId, turnstileToken });
+  };
 
   useEffect(() => {
     if (phase === "start") {
@@ -115,13 +121,17 @@ export default function MovieDetail({ movie, origin, reviews, onAddReview, onClo
                   comments={reviews.comments}
                   status={reviews.status}
                   hasOlder={reviews.hasOlder}
-                  maxDepth={1}
+                  maxDepth={2}
+                  onReply={reply}
+                  replyLabel="Your reply"
+                  replyShowsName
                   onDelete={reviews.remove}
                   onReact={reviews.react}
                   onLoadOlder={reviews.loadOlder}
                   noun="reviews"
                   emptyText="No reviews yet. Be the first to add one."
                 />
+                <div ref={turnstile.ref} className="detail-turnstile" />
               </section>
             </div>
           </div>
