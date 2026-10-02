@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"strings"
 	"testing"
@@ -42,14 +43,21 @@ func do(t *testing.T, h http.Handler, method, path, visitor, body string) *httpt
 }
 
 type commentJSON struct {
-	ID         int64         `json:"id"`
-	ParentID   int64         `json:"parentId"`
-	Depth      int           `json:"depth"`
-	AuthorName string        `json:"authorName"`
-	Body       string        `json:"body"`
-	Status     string        `json:"status"`
-	Mine       bool          `json:"mine"`
-	Replies    []commentJSON `json:"replies"`
+	ID         int64          `json:"id"`
+	ParentID   int64          `json:"parentId"`
+	Depth      int            `json:"depth"`
+	AuthorName string         `json:"authorName"`
+	Body       string         `json:"body"`
+	Status     string         `json:"status"`
+	Mine       bool           `json:"mine"`
+	Replies    []commentJSON  `json:"replies"`
+	Reactions  []reactionJSON `json:"reactions"`
+}
+
+type reactionJSON struct {
+	Emoji string `json:"emoji"`
+	Count int    `json:"count"`
+	Mine  bool   `json:"mine"`
 }
 
 func TestPostAndReadThread(t *testing.T) {
@@ -168,5 +176,72 @@ func TestClientIPComesFromTheEdgeProxy(t *testing.T) {
 
 	if gotIP != "198.51.100.4" {
 		t.Errorf("verifier got IP %q", gotIP)
+	}
+}
+
+func TestReactions(t *testing.T) {
+	h := newServer(t, verifier{})
+	rec := do(t, h, "POST", "/api/threads/movie:2025-01/comments", "v1", `{"body":"boo","turnstileToken":"ok"}`)
+	var c commentJSON
+	json.NewDecoder(rec.Body).Decode(&c)
+	path := "/api/comments/" + itoa(c.ID) + "/reactions/" + url.PathEscape("😱")
+
+	rec = do(t, h, "PUT", path, "v2", "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("react status = %d, body %s", rec.Code, rec.Body)
+	}
+	var out struct {
+		Reactions []reactionJSON `json:"reactions"`
+	}
+	json.NewDecoder(rec.Body).Decode(&out)
+	if len(out.Reactions) != 1 || out.Reactions[0] != (reactionJSON{"😱", 1, true}) {
+		t.Errorf("after reacting: %+v", out.Reactions)
+	}
+
+	// The thread shows the counts, and "mine" for the viewer only.
+	for viewer, mine := range map[string]bool{"v1": false, "v2": true} {
+		rec = do(t, h, "GET", "/api/threads/movie:2025-01/comments", viewer, "")
+		var page struct {
+			Comments []commentJSON `json:"comments"`
+		}
+		json.NewDecoder(rec.Body).Decode(&page)
+		if r := page.Comments[0].Reactions; len(r) != 1 || r[0] != (reactionJSON{"😱", 1, mine}) {
+			t.Errorf("thread as %s: reactions %+v", viewer, r)
+		}
+	}
+	if strings.Contains(rec.Body.String(), "v2") {
+		t.Errorf("who reacted leaked: %s", rec.Body)
+	}
+
+	rec = do(t, h, "DELETE", path, "v2", "")
+	body := rec.Body.String()
+	json.Unmarshal([]byte(body), &out)
+	if rec.Code != http.StatusOK || len(out.Reactions) != 0 {
+		t.Errorf("after removing: %d %+v", rec.Code, out.Reactions)
+	}
+	if !strings.Contains(body, `"reactions":[]`) {
+		t.Errorf("no reactions should be an empty list, got %s", body)
+	}
+}
+
+func TestReactionErrors(t *testing.T) {
+	h := newServer(t, verifier{})
+	rec := do(t, h, "POST", "/api/threads/movie:2025-01/comments", "v1", `{"body":"boo","turnstileToken":"ok"}`)
+	var c commentJSON
+	json.NewDecoder(rec.Body).Decode(&c)
+
+	for _, tc := range []struct {
+		path, visitor string
+		status        int
+		code          string
+	}{
+		{"/api/comments/" + itoa(c.ID) + "/reactions/lol", "v2", 422, "invalid_emoji"},
+		{"/api/comments/999/reactions/" + url.PathEscape("😱"), "v2", 404, "not_found"},
+		{"/api/comments/" + itoa(c.ID) + "/reactions/" + url.PathEscape("😱"), "", 401, "unauthenticated"},
+	} {
+		rec := do(t, h, "PUT", tc.path, tc.visitor, "")
+		if rec.Code != tc.status || !strings.Contains(rec.Body.String(), tc.code) {
+			t.Errorf("PUT %s: %d %s, want %d %s", tc.path, rec.Code, rec.Body, tc.status, tc.code)
+		}
 	}
 }

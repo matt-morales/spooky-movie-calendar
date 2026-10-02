@@ -15,6 +15,7 @@ function comment(over: Partial<Comment>): Comment {
     mine: false,
     createdAt: "2025-10-01T20:00:00Z",
     replies: [],
+    reactions: [],
     ...over,
   };
 }
@@ -24,6 +25,7 @@ function fakeClient(initial: Comment[]): CommentClient {
     thread: vi.fn(async () => ({ comments: initial, nextBefore: 0 })),
     post: vi.fn(async (_key, input) => comment({ id: 99, body: input.body, mine: true })),
     remove: vi.fn(async () => undefined),
+    react: vi.fn(async () => [{ emoji: "😱", count: 5, mine: true }]),
   };
 }
 
@@ -67,5 +69,51 @@ describe("useCommentThread", () => {
 
     expect(client.remove).toHaveBeenCalledWith(1);
     expect(result.current.comments).toEqual([]);
+  });
+
+  it("toggles a reaction at once, then takes the server's counts", async () => {
+    const client = fakeClient([comment({ id: 1, reactions: [{ emoji: "😱", count: 2, mine: false }] })]);
+    let resolve!: (r: Awaited<ReturnType<CommentClient["react"]>>) => void;
+    vi.mocked(client.react).mockImplementationOnce(() => new Promise((r) => (resolve = r)));
+    const { result } = renderHook(() => useCommentThread("movie:1", { client }));
+    await waitFor(() => expect(result.current.comments).toHaveLength(1));
+
+    let done!: Promise<void>;
+    act(() => {
+      done = result.current.react(1, "😱");
+    });
+    // Optimistic: joined straight away.
+    expect(result.current.comments[0]!.reactions).toEqual([{ emoji: "😱", count: 3, mine: true }]);
+    expect(client.react).toHaveBeenCalledWith(1, "😱", true);
+
+    await act(async () => {
+      resolve([{ emoji: "😱", count: 5, mine: true }]);
+      await done;
+    });
+    expect(result.current.comments[0]!.reactions).toEqual([{ emoji: "😱", count: 5, mine: true }]);
+  });
+
+  it("takes a reaction back, and undoes a change the server refused", async () => {
+    const client = fakeClient([comment({ id: 1, reactions: [{ emoji: "💀", count: 1, mine: true }] })]);
+    vi.mocked(client.react).mockRejectedValueOnce(new Error("offline"));
+    const { result } = renderHook(() => useCommentThread("movie:1", { client }));
+    await waitFor(() => expect(result.current.comments).toHaveLength(1));
+
+    await act(() => result.current.react(1, "💀").catch(() => {}));
+
+    expect(client.react).toHaveBeenCalledWith(1, "💀", false); // it was mine, so this removes it
+    expect(result.current.comments[0]!.reactions).toEqual([{ emoji: "💀", count: 1, mine: true }]);
+  });
+
+  it("adds a new emoji at the end", async () => {
+    const client = fakeClient([comment({ id: 1, reactions: [{ emoji: "😱", count: 1, mine: false }] })]);
+    vi.mocked(client.react).mockImplementationOnce(() => new Promise(() => {}));
+    const { result } = renderHook(() => useCommentThread("movie:1", { client }));
+    await waitFor(() => expect(result.current.comments).toHaveLength(1));
+
+    act(() => {
+      result.current.react(1, "🎃");
+    });
+    expect(result.current.comments[0]!.reactions.map((r) => r.emoji)).toEqual(["😱", "🎃"]);
   });
 });

@@ -25,6 +25,7 @@ const movie = (over: Partial<Movie>): Movie => ({
   description: "",
   posterUrl: "",
   rating: { average: 0, count: 0, mine: null },
+  reviewCount: 0,
   ...over,
 });
 

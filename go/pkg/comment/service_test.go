@@ -3,6 +3,7 @@ package comment_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -262,5 +263,117 @@ func TestVerifierFuncAdaptsPlainFunctions(t *testing.T) {
 	})
 	if !errors.Is(err, comment.ErrNotHuman) || gotToken != "tok" || gotIP != "203.0.113.1" {
 		t.Fatalf("err=%v token=%q ip=%q", err, gotToken, gotIP)
+	}
+}
+
+func TestReactAddsAndRemovesAVisitorsReaction(t *testing.T) {
+	f := newFixture(t, comment.Config{})
+	c := f.post(t, comment.PostInput{AuthorID: "author"})
+	ctx := context.Background()
+
+	if _, err := f.svc.React(ctx, c.ID, "v1", "😱", true); err != nil {
+		t.Fatal(err)
+	}
+	f.now = f.now.Add(time.Minute)
+	f.svc.React(ctx, c.ID, "v2", "😱", true)
+	f.svc.React(ctx, c.ID, "v2", "💀", true)
+	got, err := f.svc.React(ctx, c.ID, "v1", "😱", true) // twice: still one
+	if err != nil {
+		t.Fatal(err)
+	}
+	// In order of first use, with who reacted.
+	if len(got) != 2 || got[0].Emoji != "😱" || got[0].Count != 2 || !got[0].By("v1") || got[0].By("v3") ||
+		got[1].Emoji != "💀" || got[1].Count != 1 || !got[1].By("v2") {
+		t.Fatalf("reactions = %+v", got)
+	}
+
+	got, _ = f.svc.React(ctx, c.ID, "v2", "💀", false)
+	if len(got) != 1 || got[0].Emoji != "😱" {
+		t.Errorf("after removing 💀: %+v", got)
+	}
+}
+
+func TestReactValidates(t *testing.T) {
+	f := newFixture(t, comment.Config{})
+	ctx := context.Background()
+	c := f.post(t, comment.PostInput{AuthorID: "author"})
+	hidden := f.post(t, comment.PostInput{AuthorID: "author"})
+	f.svc.Moderate(ctx, hidden.ID, comment.StatusHidden)
+
+	cases := []struct {
+		id    comment.ID
+		emoji string
+		want  error
+	}{
+		{c.ID, "lol", comment.ErrInvalidEmoji},
+		{999, "😱", comment.ErrNotFound},
+		{hidden.ID, "😱", comment.ErrNotFound}, // removed comments take no reactions
+	}
+	for _, tc := range cases {
+		if _, err := f.svc.React(ctx, tc.id, "v1", tc.emoji, true); !errors.Is(err, tc.want) {
+			t.Errorf("React(%d, %q) = %v, want %v", tc.id, tc.emoji, err, tc.want)
+		}
+	}
+	if _, err := f.svc.React(ctx, c.ID, "", "😱", true); err == nil {
+		t.Errorf("React with no visitor should fail")
+	}
+}
+
+func TestReactLimitsDistinctEmojiPerComment(t *testing.T) {
+	f := newFixture(t, comment.Config{})
+	ctx := context.Background()
+	c := f.post(t, comment.PostInput{AuthorID: "author"})
+	emoji := []string{"😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃", "😉", "😊", "😇", "🥰", "😍", "🤩", "😘", "😗", "😚", "😙"}
+	for i, e := range emoji[:comment.MaxReactionKinds] {
+		if _, err := f.svc.React(ctx, c.ID, fmt.Sprintf("v%d", i), e, true); err != nil {
+			t.Fatalf("reaction %d: %v", i, err)
+		}
+	}
+	if _, err := f.svc.React(ctx, c.ID, "v99", "💀", true); !errors.Is(err, comment.ErrTooManyReactions) {
+		t.Errorf("a new kind past the limit: %v, want ErrTooManyReactions", err)
+	}
+	// Joining an existing reaction is always fine.
+	if _, err := f.svc.React(ctx, c.ID, "v99", emoji[0], true); err != nil {
+		t.Errorf("joining an existing reaction: %v", err)
+	}
+}
+
+func TestThreadIncludesReactions(t *testing.T) {
+	f := newFixture(t, comment.Config{})
+	ctx := context.Background()
+	c := f.post(t, comment.PostInput{AuthorID: "author"})
+	other := f.post(t, comment.PostInput{AuthorID: "author"})
+	f.svc.React(ctx, c.ID, "v1", "🎃", true)
+
+	page, err := f.svc.Thread(ctx, "movie:2025-31", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	byID := map[comment.ID]*comment.Node{}
+	for _, n := range page.Comments {
+		byID[n.ID] = n
+	}
+	if r := byID[c.ID].Reactions; len(r) != 1 || r[0].Emoji != "🎃" || !r[0].By("v1") {
+		t.Errorf("reactions on c = %+v", r)
+	}
+	if r := byID[other.ID].Reactions; len(r) != 0 {
+		t.Errorf("reactions on other = %+v", r)
+	}
+}
+
+func TestCountsVisibleCommentsPerThread(t *testing.T) {
+	f := newFixture(t, comment.Config{})
+	ctx := context.Background()
+	f.post(t, comment.PostInput{AuthorID: "a", ThreadKey: "movie:2025-01"})
+	f.post(t, comment.PostInput{AuthorID: "b", ThreadKey: "movie:2025-01"})
+	got, err := f.svc.Counts(ctx, []string{"movie:2025-01", "movie:2025-02"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got["movie:2025-01"] != 2 || got["movie:2025-02"] != 0 {
+		t.Errorf("Counts = %v", got)
+	}
+	if _, err := f.svc.Counts(ctx, []string{"BAD KEY"}); !errors.Is(err, comment.ErrInvalidThreadKey) {
+		t.Errorf("bad key: %v", err)
 	}
 }

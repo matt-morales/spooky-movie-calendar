@@ -119,3 +119,41 @@ func parentToDB(id comment.ID) *int64 {
 	v := int64(id)
 	return &v
 }
+
+func (s *Store) AddReaction(ctx context.Context, r comment.ReactionRow) error {
+	return s.q.AddReaction(ctx, db.AddReactionParams{
+		CommentID: int64(r.CommentID), AuthorID: r.AuthorID, Emoji: r.Emoji, CreatedAt: r.CreatedAt,
+	})
+}
+
+func (s *Store) RemoveReaction(ctx context.Context, id comment.ID, authorID, emoji string) error {
+	return s.q.RemoveReaction(ctx, db.RemoveReactionParams{CommentID: int64(id), AuthorID: authorID, Emoji: emoji})
+}
+
+func (s *Store) ListReactions(ctx context.Context, ids []comment.ID) ([]comment.ReactionRow, error) {
+	raw := make([]int64, len(ids))
+	for i, id := range ids {
+		raw[i] = int64(id)
+	}
+	rows, err := s.q.ListReactions(ctx, raw)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]comment.ReactionRow, len(rows))
+	for i, r := range rows {
+		out[i] = comment.ReactionRow{CommentID: comment.ID(r.CommentID), AuthorID: r.AuthorID, Emoji: r.Emoji, CreatedAt: r.CreatedAt}
+	}
+	return out, nil
+}
+
+func (s *Store) CountVisible(ctx context.Context, threadKeys []string) (map[string]int, error) {
+	rows, err := s.q.CountVisibleByThread(ctx, threadKeys)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]int, len(rows))
+	for _, r := range rows {
+		out[r.ThreadKey] = int(r.Count)
+	}
+	return out, nil
+}

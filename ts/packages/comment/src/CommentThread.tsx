@@ -1,8 +1,10 @@
 import { useState } from "react";
 import type { CommentClient } from "./api";
 import { CommentForm } from "./CommentForm";
-import type { Comment } from "./types";
+import { EmojiTray, SmileIcon } from "./EmojiTray";
+import type { Comment, Reaction } from "./types";
 import { useCommentThread, type ThreadStatus } from "./useCommentThread";
+import { fullTime, timeAgo, useNow } from "./when";
 
 export interface CommentThreadProps {
   /** Anything the host app uses to identify a page, e.g. "movie:2025-07". */
@@ -35,6 +37,7 @@ export function CommentThread({ threadKey, client, getVerificationToken, maxDept
         maxDepth={maxDepth}
         onReply={post}
         onDelete={thread.remove}
+        onReact={thread.react}
         onLoadOlder={thread.loadOlder}
       />
     </section>
@@ -49,6 +52,8 @@ export interface CommentListProps {
   maxDepth?: number;
   onReply?(body: string, authorName: string, parentId: number): Promise<void>;
   onDelete(id: number): Promise<void>;
+  /** Toggles your emoji reaction; without it, reactions are shown read-only. */
+  onReact?(id: number, emoji: string): Promise<void>;
   onLoadOlder(): Promise<void>;
   /** Shown once loaded when there are no comments. */
   emptyText?: string;
@@ -62,10 +67,12 @@ export function CommentList({
   maxDepth = 5,
   onReply,
   onDelete,
+  onReact,
   onLoadOlder,
   emptyText,
   noun = "comments",
 }: CommentListProps) {
+  const now = useNow();
   return (
     <>
       {status === "loading" && <p className="cmt-muted">Loading {noun}…</p>}
@@ -75,7 +82,14 @@ export function CommentList({
       <ol className="cmt-list">
         {comments.map((c) => (
           <li key={c.id}>
-            <CommentItem comment={c} maxDepth={onReply ? maxDepth : 0} onReply={onReply} onDelete={onDelete} />
+            <CommentItem
+              comment={c}
+              now={now}
+              maxDepth={onReply ? maxDepth : 0}
+              onReply={onReply}
+              onDelete={onDelete}
+              onReact={onReact}
+            />
           </li>
         ))}
       </ol>
@@ -91,12 +105,14 @@ export function CommentList({
 
 interface ItemProps {
   comment: Comment;
+  now: number;
   maxDepth: number;
   onReply?(body: string, authorName: string, parentId: number): Promise<void>;
   onDelete(id: number): Promise<void>;
+  onReact?(id: number, emoji: string): Promise<void>;
 }
 
-function CommentItem({ comment: c, maxDepth, onReply, onDelete }: ItemProps) {
+function CommentItem({ comment: c, now, maxDepth, onReply, onDelete, onReact }: ItemProps) {
   const [replying, setReplying] = useState(false);
   const removed = c.status === "removed";
   const author = removed ? "" : c.authorName || "Anonymous";
@@ -110,9 +126,15 @@ function CommentItem({ comment: c, maxDepth, onReply, onDelete }: ItemProps) {
         <>
           <header className="cmt-meta">
             <span className="cmt-author">{author}</span>
-            <time dateTime={c.createdAt}>{formatWhen(c.createdAt)}</time>
+            <time dateTime={c.createdAt} title={fullTime(c.createdAt)}>
+              {timeAgo(c.createdAt, now)}
+            </time>
           </header>
           <p className="cmt-body">{c.body}</p>
+          <Reactions
+            reactions={c.reactions}
+            onReact={onReact && ((emoji) => onReact(c.id, emoji).catch(() => {}))}
+          />
           <div className="cmt-actions">
             {canReply && (
               <button type="button" className="cmt-link" onClick={() => setReplying((r) => !r)}>
@@ -145,7 +167,14 @@ function CommentItem({ comment: c, maxDepth, onReply, onDelete }: ItemProps) {
         <ol className="cmt-list cmt-replies">
           {c.replies.map((r) => (
             <li key={r.id}>
-              <CommentItem comment={r} maxDepth={maxDepth} onReply={onReply} onDelete={onDelete} />
+              <CommentItem
+                comment={r}
+                now={now}
+                maxDepth={maxDepth}
+                onReply={onReply}
+                onDelete={onDelete}
+                onReact={onReact}
+              />
             </li>
           ))}
         </ol>
@@ -158,6 +187,37 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function formatWhen(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+// Each emoji with its count, pressed when it's yours; then a button to add one.
+function Reactions({ reactions, onReact }: { reactions: Reaction[]; onReact?: (emoji: string) => void }) {
+  if (!onReact && reactions.length === 0) return null;
+  return (
+    <div className="cmt-reactions">
+      {reactions.map((r) =>
+        onReact ? (
+          <button
+            key={r.emoji}
+            type="button"
+            className="cmt-reaction"
+            aria-pressed={r.mine}
+            aria-label={`${r.emoji} ${r.count}${r.mine ? ", you reacted" : ""}`}
+            onClick={() => onReact(r.emoji)}
+          >
+            <span aria-hidden="true">{r.emoji}</span>
+            <span className="cmt-reaction-count">{r.count}</span>
+          </button>
+        ) : (
+          <span key={r.emoji} className="cmt-reaction" aria-label={`${r.emoji} ${r.count}`}>
+            <span aria-hidden="true">{r.emoji}</span>
+            <span className="cmt-reaction-count">{r.count}</span>
+          </span>
+        ),
+      )}
+      {onReact && (
+        <EmojiTray label="Add reaction" className="cmt-reaction cmt-reaction--add" onPick={onReact}>
+          <SmileIcon />
+          <span aria-hidden="true">+</span>
+        </EmojiTray>
+      )}
+    </div>
+  );
 }

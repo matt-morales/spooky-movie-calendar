@@ -95,7 +95,11 @@ type movieJSON struct {
 	LetterboxdURL string     `json:"letterboxdUrl,omitempty"`
 	HostRating    int        `json:"hostRating,omitempty"`
 	Rating        ratingJSON `json:"rating"`
+	ReviewCount   int        `json:"reviewCount"` // visible reviews (comments on its thread)
 }
+
+// reviewThread is the comment thread holding a movie's reviews.
+func reviewThread(id domain.MovieID) string { return "movie:" + string(id) }
 
 type lineupJSON struct {
 	Year              int    `json:"year"`
@@ -123,6 +127,15 @@ func (s *server) listMovies(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
+	threads := make([]string, len(movies))
+	for i, m := range movies {
+		threads[i] = reviewThread(m.ID)
+	}
+	reviews, err := s.Comments.Counts(r.Context(), threads)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
 
 	out := make([]movieJSON, len(movies))
 	for i, m := range movies {
@@ -131,7 +144,8 @@ func (s *server) listMovies(w http.ResponseWriter, r *http.Request) {
 			Title: m.Title, Directors: m.Directors, Description: m.Description,
 			PosterURL:   s.imageURL(m.PosterPath),
 			ReleaseYear: m.ReleaseYear, LetterboxdURL: m.LetterboxdURL, HostRating: m.HostRating,
-			Rating: toRatingJSON(m.Rating),
+			Rating:      toRatingJSON(m.Rating),
+			ReviewCount: reviews[reviewThread(m.ID)],
 		}
 	}
 	w.Header().Set("Cache-Control", "private, no-store")

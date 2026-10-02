@@ -19,7 +19,7 @@ test("loads the lineup, rates a movie and opens its reviews", async ({ page }) =
   await modal.getByRole("button", { name: "Rate 4 drops" }).click();
   await expect(modal.getByLabel("Your review")).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(card.getByText(/\d+(\.\d)?\/10/)).toBeVisible();
+  await expect(card.getByText(/^\d+(\.\d)?\/5$/)).toBeVisible(); // the average, in drops out of 5
 
   // Clicking the card turns it over to show its reviews.
   await card.getByText(/Nerdy high schooler/).click();

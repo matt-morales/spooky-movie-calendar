@@ -10,6 +10,29 @@ import (
 	"time"
 )
 
+const addReaction = `-- name: AddReaction :exec
+INSERT INTO comment_reactions (comment_id, author_id, emoji, created_at)
+VALUES ($1, $2, $3, $4)
+ON CONFLICT DO NOTHING
+`
+
+type AddReactionParams struct {
+	CommentID int64
+	AuthorID  string
+	Emoji     string
+	CreatedAt time.Time
+}
+
+func (q *Queries) AddReaction(ctx context.Context, arg AddReactionParams) error {
+	_, err := q.db.Exec(ctx, addReaction,
+		arg.CommentID,
+		arg.AuthorID,
+		arg.Emoji,
+		arg.CreatedAt,
+	)
+	return err
+}
+
 const countCommentsByAuthorSince = `-- name: CountCommentsByAuthorSince :one
 SELECT count(*) FROM comments WHERE author_id = $1 AND created_at >= $2
 `
@@ -24,6 +47,38 @@ func (q *Queries) CountCommentsByAuthorSince(ctx context.Context, arg CountComme
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const countVisibleByThread = `-- name: CountVisibleByThread :many
+SELECT thread_key, count(*) AS count
+FROM comments
+WHERE thread_key = ANY($1::text[]) AND status = 'visible'
+GROUP BY thread_key
+`
+
+type CountVisibleByThreadRow struct {
+	ThreadKey string
+	Count     int64
+}
+
+func (q *Queries) CountVisibleByThread(ctx context.Context, threadKeys []string) ([]CountVisibleByThreadRow, error) {
+	rows, err := q.db.Query(ctx, countVisibleByThread, threadKeys)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountVisibleByThreadRow
+	for rows.Next() {
+		var i CountVisibleByThreadRow
+		if err := rows.Scan(&i.ThreadKey, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getComment = `-- name: GetComment :one
@@ -90,6 +145,37 @@ func (q *Queries) InsertComment(ctx context.Context, arg InsertCommentParams) (C
 	return i, err
 }
 
+const listReactions = `-- name: ListReactions :many
+SELECT comment_id, author_id, emoji, created_at FROM comment_reactions
+WHERE comment_id = ANY($1::bigint[])
+ORDER BY created_at, comment_id, emoji, author_id
+`
+
+func (q *Queries) ListReactions(ctx context.Context, ids []int64) ([]CommentReaction, error) {
+	rows, err := q.db.Query(ctx, listReactions, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CommentReaction
+	for rows.Next() {
+		var i CommentReaction
+		if err := rows.Scan(
+			&i.CommentID,
+			&i.AuthorID,
+			&i.Emoji,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listThread = `-- name: ListThread :many
 WITH RECURSIVE thread AS (
     (SELECT r.id, r.thread_key, r.parent_id, r.depth, r.author_id, r.author_name, r.body, r.status, r.created_at FROM comments r
@@ -152,6 +238,21 @@ func (q *Queries) ListThread(ctx context.Context, arg ListThreadParams) ([]ListT
 		return nil, err
 	}
 	return items, nil
+}
+
+const removeReaction = `-- name: RemoveReaction :exec
+DELETE FROM comment_reactions WHERE comment_id = $1 AND author_id = $2 AND emoji = $3
+`
+
+type RemoveReactionParams struct {
+	CommentID int64
+	AuthorID  string
+	Emoji     string
+}
+
+func (q *Queries) RemoveReaction(ctx context.Context, arg RemoveReactionParams) error {
+	_, err := q.db.Exec(ctx, removeReaction, arg.CommentID, arg.AuthorID, arg.Emoji)
+	return err
 }
 
 const setCommentStatus = `-- name: SetCommentStatus :execrows

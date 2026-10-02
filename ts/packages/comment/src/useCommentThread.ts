@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createCommentClient, type CommentClient } from "./api";
-import { addReply, removeComment } from "./tree";
+import { addReply, findComment, removeComment, setReactions, toggleReaction } from "./tree";
 import type { Comment } from "./types";
 
 export interface UseCommentThreadOptions {
@@ -68,11 +68,29 @@ export function useCommentThread(threadKey: string, { client: givenClient, enabl
     [client],
   );
 
+  // Toggles your reaction straight away, then takes the server's counts (or
+  // puts the old ones back if it refused).
+  const react = useCallback(
+    async (id: number, emoji: string) => {
+      const before = findComment(comments, id)?.reactions ?? [];
+      const on = !before.some((r) => r.emoji === emoji && r.mine);
+      setComments((cs) => setReactions(cs, id, toggleReaction(before, emoji)));
+      try {
+        const after = await client.react(id, emoji, on);
+        setComments((cs) => setReactions(cs, id, after));
+      } catch (err) {
+        setComments((cs) => setReactions(cs, id, before));
+        throw err;
+      }
+    },
+    [client, comments],
+  );
+
   const loadOlder = useCallback(async () => {
     const page = await client.thread(threadKey, nextBefore);
     setComments((cs) => [...cs, ...page.comments]);
     setNextBefore(page.nextBefore);
   }, [client, threadKey, nextBefore]);
 
-  return { comments, status, hasOlder: nextBefore > 0, post, remove, loadOlder };
+  return { comments, status, hasOlder: nextBefore > 0, post, remove, react, loadOlder };
 }

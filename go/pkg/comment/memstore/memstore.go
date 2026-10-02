@@ -3,6 +3,7 @@ package memstore
 
 import (
 	"context"
+	"slices"
 	"sort"
 	"sync"
 	"time"
@@ -11,9 +12,10 @@ import (
 )
 
 type Store struct {
-	mu     sync.Mutex
-	nextID comment.ID
-	byID   map[comment.ID]comment.Comment
+	mu        sync.Mutex
+	nextID    comment.ID
+	byID      map[comment.ID]comment.Comment
+	reactions []comment.ReactionRow // in insertion order
 }
 
 func New() *Store {
@@ -98,4 +100,50 @@ func (s *Store) SetStatus(_ context.Context, id comment.ID, status comment.Statu
 	c.Status = status
 	s.byID[id] = c
 	return nil
+}
+
+func (s *Store) AddReaction(_ context.Context, r comment.ReactionRow) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, have := range s.reactions {
+		if have.CommentID == r.CommentID && have.AuthorID == r.AuthorID && have.Emoji == r.Emoji {
+			return nil
+		}
+	}
+	s.reactions = append(s.reactions, r)
+	return nil
+}
+
+func (s *Store) RemoveReaction(_ context.Context, id comment.ID, authorID, emoji string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.reactions = slices.DeleteFunc(s.reactions, func(r comment.ReactionRow) bool {
+		return r.CommentID == id && r.AuthorID == authorID && r.Emoji == emoji
+	})
+	return nil
+}
+
+func (s *Store) ListReactions(_ context.Context, ids []comment.ID) ([]comment.ReactionRow, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var out []comment.ReactionRow
+	for _, r := range s.reactions {
+		if slices.Contains(ids, r.CommentID) {
+			out = append(out, r)
+		}
+	}
+	sort.SliceStable(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	return out, nil
+}
+
+func (s *Store) CountVisible(_ context.Context, threadKeys []string) (map[string]int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := map[string]int{}
+	for _, c := range s.byID {
+		if c.Status == comment.StatusVisible && slices.Contains(threadKeys, c.ThreadKey) {
+			out[c.ThreadKey]++
+		}
+	}
+	return out, nil
 }

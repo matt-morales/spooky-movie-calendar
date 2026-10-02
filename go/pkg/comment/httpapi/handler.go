@@ -5,6 +5,8 @@
 //	GET    {prefix}/threads/{key}/comments?before=ID   a page of the thread as a tree
 //	POST   {prefix}/threads/{key}/comments             post a comment or reply
 //	DELETE {prefix}/comments/{id}                      delete your own comment
+//	PUT    {prefix}/comments/{id}/reactions/{emoji}    react (emoji URL-encoded)
+//	DELETE {prefix}/comments/{id}/reactions/{emoji}    take your reaction back
 //
 // The host app decides who the caller is via an Identity function, so this
 // package works with cookies, sessions, JWTs or anything else.
@@ -52,6 +54,8 @@ func (h *Handler) Register(mux *http.ServeMux, prefix string) {
 	mux.HandleFunc("GET "+prefix+"/threads/{key}/comments", h.thread)
 	mux.HandleFunc("POST "+prefix+"/threads/{key}/comments", h.post)
 	mux.HandleFunc("DELETE "+prefix+"/comments/{id}", h.delete)
+	mux.HandleFunc("PUT "+prefix+"/comments/{id}/reactions/{emoji}", h.react(true))
+	mux.HandleFunc("DELETE "+prefix+"/comments/{id}/reactions/{emoji}", h.react(false))
 }
 
 type commentJSON struct {
@@ -64,13 +68,31 @@ type commentJSON struct {
 	Mine       bool           `json:"mine"`
 	CreatedAt  time.Time      `json:"createdAt"`
 	Replies    []commentJSON  `json:"replies"`
+	Reactions  []reactionJSON `json:"reactions"`
+}
+
+// reactionJSON says how many people used an emoji and whether the viewer
+// did, never who.
+type reactionJSON struct {
+	Emoji string `json:"emoji"`
+	Count int    `json:"count"`
+	Mine  bool   `json:"mine"`
+}
+
+func toReactionsJSON(rs []comment.Reaction, viewer string) []reactionJSON {
+	out := make([]reactionJSON, len(rs))
+	for i, r := range rs {
+		out[i] = reactionJSON{Emoji: r.Emoji, Count: r.Count, Mine: viewer != "" && r.By(viewer)}
+	}
+	return out
 }
 
 func toJSON(n *comment.Node, viewer string) commentJSON {
 	out := commentJSON{
 		ID: n.ID, ParentID: n.ParentID, Depth: n.Depth, AuthorName: n.AuthorName, Body: n.Body,
 		Status: n.Status, Mine: viewer != "" && n.AuthorID == viewer, CreatedAt: n.CreatedAt.UTC(),
-		Replies: make([]commentJSON, 0, len(n.Replies)),
+		Replies:   make([]commentJSON, 0, len(n.Replies)),
+		Reactions: toReactionsJSON(n.Reactions, viewer),
 	}
 	for _, r := range n.Replies {
 		out.Replies = append(out.Replies, toJSON(r, viewer))
@@ -146,6 +168,27 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *Handler) react(on bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		author, ok := h.identity(r)
+		if !ok {
+			writeError(w, r, errUnauthenticated)
+			return
+		}
+		id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+		if err != nil {
+			writeError(w, r, comment.ErrNotFound)
+			return
+		}
+		reactions, err := h.svc.React(r.Context(), comment.ID(id), author, r.PathValue("emoji"), on)
+		if err != nil {
+			writeError(w, r, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"reactions": toReactionsJSON(reactions, author)})
+	}
+}
+
 var (
 	errUnauthenticated = errors.New("no visitor identity")
 	errBadRequest      = errors.New("request body is not valid JSON")
@@ -167,6 +210,8 @@ var errorCodes = []struct {
 	{comment.ErrNotHuman, http.StatusForbidden, "not_human"},
 	{comment.ErrRateLimited, http.StatusTooManyRequests, "rate_limited"},
 	{comment.ErrNotFound, http.StatusNotFound, "not_found"},
+	{comment.ErrInvalidEmoji, http.StatusUnprocessableEntity, "invalid_emoji"},
+	{comment.ErrTooManyReactions, http.StatusUnprocessableEntity, "too_many_reactions"},
 }
 
 func writeError(w http.ResponseWriter, r *http.Request, err error) {

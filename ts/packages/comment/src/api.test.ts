@@ -44,6 +44,20 @@ describe("createCommentClient", () => {
     expect(fetch).toHaveBeenCalledWith("/api/comments/7", expect.objectContaining({ method: "DELETE" }));
   });
 
+  it("adds and removes a reaction, encoding the emoji", async () => {
+    const fetch = fakeFetch(200, { reactions: [{ emoji: "😱", count: 2, mine: true }] });
+    const client = createCommentClient({ fetch });
+
+    expect(await client.react(7, "😱", true)).toEqual([{ emoji: "😱", count: 2, mine: true }]);
+    expect(fetch).toHaveBeenLastCalledWith(
+      `/api/comments/7/reactions/${encodeURIComponent("😱")}`,
+      expect.objectContaining({ method: "PUT" }),
+    );
+
+    await client.react(7, "😱", false);
+    expect(fetch).toHaveBeenLastCalledWith(expect.any(String), expect.objectContaining({ method: "DELETE" }));
+  });
+
   it("turns error responses into CommentApiError", async () => {
     const fetch = fakeFetch(429, { error: { code: "rate_limited", message: "slow down" } });
     const err = await createCommentClient({ fetch })

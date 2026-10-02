@@ -133,6 +133,24 @@ func TestListMovies(t *testing.T) {
 	}
 }
 
+func TestListMoviesCountsEachMoviesReviews(t *testing.T) {
+	h := newServer(t, &deps{})
+	for range 2 {
+		rec := request(h, "POST", "/api/threads/movie:2025-01/comments", `{"body":"So good","turnstileToken":"ok"}`)
+		if rec.Code != http.StatusCreated {
+			t.Fatalf("post review: %d %s", rec.Code, rec.Body)
+		}
+	}
+	rec := request(h, "GET", "/api/movies?year=2025", "")
+	var body struct {
+		Movies []map[string]any `json:"movies"`
+	}
+	json.NewDecoder(rec.Body).Decode(&body)
+	if got := body.Movies[0]["reviewCount"]; got != 2.0 {
+		t.Errorf("reviewCount = %v, want 2", got)
+	}
+}
+
 func TestListMoviesDefaultsToCurrentYearAndRejectsJunk(t *testing.T) {
 	d := &deps{}
 	h := newServer(t, d)

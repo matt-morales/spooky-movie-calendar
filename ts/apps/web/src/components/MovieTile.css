@@ -147,6 +147,39 @@
   gap: var(--space-sm) var(--space-xl);
 }
 
+/* "3 reviews": opens them, like clicking the card. */
+.tile-reviews {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  font: inherit;
+  font-size: 0.8em;
+  color: var(--text-faint);
+  background: none;
+  border: 0;
+}
+
+button.tile-reviews {
+  cursor: pointer;
+  transition: color var(--speed-fast) ease;
+}
+
+button.tile-reviews:hover {
+  color: var(--accent);
+}
+
+button.tile-reviews:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.tile-reviews svg {
+  width: 15px;
+  height: 15px;
+}
+
 .tile-mine {
   display: inline-flex;
   align-items: center;

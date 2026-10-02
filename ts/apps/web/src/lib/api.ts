@@ -20,6 +20,7 @@ export interface Movie {
   letterboxdUrl?: string;
   hostRating?: number;
   rating: RatingSummary;
+  reviewCount: number; // visible reviews
 }
 
 /** A year's lineup: its nights, plus the Letterboxd list it's published as. */
