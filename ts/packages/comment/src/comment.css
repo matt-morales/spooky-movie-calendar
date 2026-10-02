@@ -191,6 +191,15 @@
   box-shadow: var(--shadow-card, 0 8px 24px rgba(0, 0, 0, 0.3));
 }
 
+/* In browsers with popovers it's in the top layer, placed by CommentForm. */
+.cmt-suggest[popover] {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  color: var(--text, inherit);
+  overflow: visible;
+}
+
 .cmt-suggest-item {
   display: flex;
   align-items: center;
@@ -237,6 +246,7 @@
 }
 
 .cmt-emoji-picker {
+  outline: none; /* focused on touch screens only so the tray has focus */
   display: flex;
   flex-direction: column;
   height: 100%;

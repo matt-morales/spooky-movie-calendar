@@ -5,7 +5,7 @@ import { loadEmoji, searchEmoji, type Emoji, type EmojiGroup } from "./emoji";
 // It uses the browser's native popover (top layer, light dismiss, Escape,
 // focus return); browsers without it get the same tray from React state.
 
-const nativePopover = typeof HTMLElement !== "undefined" && "showPopover" in HTMLElement.prototype;
+export const nativePopover = typeof HTMLElement !== "undefined" && "showPopover" in HTMLElement.prototype;
 
 const TRAY_WIDTH = 320;
 const TRAY_HEIGHT = 360;
@@ -105,7 +105,16 @@ function place(tray: HTMLElement, anchor: HTMLElement) {
 function EmojiPicker({ onPick }: { onPick(emoji: string): void }) {
   const [groups, setGroups] = useState<EmojiGroup[] | null>(null);
   const [query, setQuery] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Focus the search box, except on touch screens: there that would pop up
+  // the keyboard over the tray, so focus the tray and let them tap Search.
+  useEffect(() => {
+    const touch = window.matchMedia?.("(pointer: coarse)").matches;
+    (touch ? rootRef : searchRef).current?.focus({ preventScroll: true });
+  }, []);
 
   useEffect(() => {
     let live = true;
@@ -118,15 +127,15 @@ function EmojiPicker({ onPick }: { onPick(emoji: string): void }) {
   const results = groups && query.trim() ? searchEmoji(groups, query, 80) : null;
 
   return (
-    <div className="cmt-emoji-picker">
+    <div ref={rootRef} className="cmt-emoji-picker" tabIndex={-1}>
       <input
+        ref={searchRef}
         type="search"
         className="cmt-input cmt-emoji-search"
         placeholder="Search emoji"
         aria-label="Search emoji"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        autoFocus
       />
 
       {groups && !results && (

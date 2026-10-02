@@ -268,6 +268,30 @@ describe("reactions", () => {
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "Pick an emoji" })).not.toBeInTheDocument());
   });
 
+  it("focuses the tray's search on desktops, but not on touch screens (no keyboard over the tray)", async () => {
+    const user = userEvent.setup();
+    const original = window.matchMedia;
+    const props = { ...listProps, onReact: async () => {}, comments: [comment({ id: 7, authorName: "Leigh" })] };
+    try {
+      for (const touch of [false, true]) {
+        window.matchMedia = vi.fn((q: string) => ({ matches: touch && q === "(pointer: coarse)" }) as MediaQueryList);
+        const { unmount } = render(<CommentList {...props} />);
+        await user.click(screen.getByRole("button", { name: "Add reaction" }));
+        const tray = await screen.findByRole("dialog", { name: "Pick an emoji" });
+        const search = within(tray).getByRole("searchbox");
+        if (touch) {
+          expect(search).not.toHaveFocus();
+          expect(tray).toContainElement(document.activeElement as HTMLElement);
+        } else {
+          expect(search).toHaveFocus();
+        }
+        unmount();
+      }
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
   it("gives removed comments no reactions", () => {
     render(
       <CommentList

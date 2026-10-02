@@ -1,12 +1,13 @@
 import { useId, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import { CommentApiError } from "./api";
 import { colonQuery, completeShortcode, insertAt, loadEmoji, searchEmoji, type Emoji, type EmojiGroup } from "./emoji";
-import { EmojiTray, SmileIcon } from "./EmojiTray";
+import { EmojiTray, nativePopover, SmileIcon } from "./EmojiTray";
 
 export const MAX_BODY = 2000;
 export const MAX_NAME = 40;
 
 const MAX_SUGGESTIONS = 6;
+const SUGGEST_GAP = 4;
 
 interface Props {
   label: string;
@@ -31,6 +32,7 @@ export function CommentForm({ label, submitLabel, showName, onSubmit, onCancel }
   const [suggesting, setSuggesting] = useState<Suggesting | null>(null);
   const [emoji, setEmoji] = useState<EmojiGroup[] | null>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const caretAfterRender = useRef<number | null>(null);
   const bodyId = useId();
   const nameId = useId();
@@ -44,6 +46,21 @@ export function CommentForm({ label, submitLabel, showName, onSubmit, onCancel }
       caretAfterRender.current = null;
     }
   });
+
+  // The suggestions float in the top layer (a manual popover, so the text box
+  // keeps focus), so a dialog or scroll box around the form can't cut them
+  // off: under the text box, or above it when there's no room below.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    const box = bodyRef.current;
+    if (!list || !box || !nativePopover) return;
+    if (!list.matches(":popover-open")) list.showPopover();
+    const r = box.getBoundingClientRect();
+    const height = list.offsetHeight;
+    const roomBelow = innerHeight - r.bottom - SUGGEST_GAP >= height;
+    list.style.left = `${r.left}px`;
+    list.style.top = `${roomBelow ? r.bottom + SUGGEST_GAP : Math.max(SUGGEST_GAP, r.top - height - SUGGEST_GAP)}px`;
+  }, [suggesting]);
 
   const replaceBody = (text: string, caret: number) => {
     setBody(text.slice(0, MAX_BODY));
@@ -151,7 +168,14 @@ export function CommentForm({ label, submitLabel, showName, onSubmit, onCancel }
           aria-activedescendant={suggesting ? optionId(suggesting.active) : undefined}
         />
         {suggesting && (
-          <ul id={listId} role="listbox" aria-label="Emoji suggestions" className="cmt-suggest">
+          <ul
+            ref={listRef}
+            id={listId}
+            role="listbox"
+            aria-label="Emoji suggestions"
+            className="cmt-suggest"
+            popover={nativePopover ? "manual" : undefined}
+          >
             {suggesting.items.map((item, i) => (
               <li
                 key={item.emoji}
