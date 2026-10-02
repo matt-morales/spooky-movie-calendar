@@ -131,3 +131,268 @@
   margin: 0;
   color: var(--accent, #c00);
 }
+
+/* ---------------- Emoji: button, ":" suggestions, tray ---------------- */
+
+.cmt-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--text-muted, #888);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition:
+    color var(--speed-fast, 0.15s),
+    background var(--speed-fast, 0.15s);
+}
+
+.cmt-icon-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.cmt-icon-button:hover,
+.cmt-icon-button[aria-expanded="true"] {
+  color: var(--text, inherit);
+  background: var(--bg-hover, rgba(127, 127, 127, 0.15));
+}
+
+.cmt-icon-button:focus-visible,
+.cmt-reaction:focus-visible,
+.cmt-emoji:focus-visible,
+.cmt-emoji-tab:focus-visible {
+  outline: 2px solid var(--accent, currentColor);
+  outline-offset: 1px;
+}
+
+/* The text box, with ":" suggestions floating just under it. */
+.cmt-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.cmt-suggest {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 10;
+  min-width: min(16rem, 100%);
+  margin: 0;
+  padding: var(--space-xs, 4px);
+  list-style: none;
+  background: var(--bg-card, Canvas);
+  border: 1px solid var(--border-faint, var(--border, #ccc));
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-card, 0 8px 24px rgba(0, 0, 0, 0.3));
+}
+
+.cmt-suggest-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 8px);
+  padding: 6px var(--space-sm, 8px);
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+}
+
+.cmt-suggest-item[aria-selected="true"] {
+  background: var(--bg-hover, rgba(127, 127, 127, 0.15));
+}
+
+.cmt-suggest-emoji {
+  font-size: 1.25em;
+  line-height: 1;
+}
+
+.cmt-suggest-name {
+  font-size: 0.85em;
+  color: var(--text-muted, #888);
+}
+
+/* The tray: placed by EmojiTray (fixed, beside its button), in the top layer. */
+.cmt-emoji-tray {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: min(320px, calc(100vw - 12px));
+  height: min(360px, calc(100vh - 12px));
+  padding: 0;
+  overflow: hidden;
+  color: var(--text, inherit);
+  background: var(--bg-card, Canvas);
+  border: 1px solid var(--border-faint, var(--border, #ccc));
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-modal, 0 16px 48px rgba(0, 0, 0, 0.4));
+}
+
+/* Browsers without native popovers: show it as a plain floating panel. */
+.cmt-emoji-tray:not([popover]) {
+  position: absolute;
+  z-index: 20;
+}
+
+.cmt-emoji-picker {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Softer than the form's inputs: it sits on the tray's own surface and has
+   focus as soon as the tray opens, so it only tints its border. */
+.cmt-emoji-search {
+  margin: var(--space-sm, 8px) var(--space-sm, 8px) 0;
+  padding: 6px var(--space-sm, 8px);
+  background: var(--bg-control, transparent);
+  border: 1px solid var(--border-faint, var(--border, #ccc));
+  border-radius: var(--radius-sm, 4px);
+}
+
+.cmt-emoji-search:focus-visible {
+  outline: none;
+  border-color: var(--accent, currentColor);
+}
+
+.cmt-emoji-tabs {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-xs, 4px) var(--space-sm, 8px);
+  border-bottom: 1px solid var(--border-subtle, transparent);
+}
+
+.cmt-emoji-tab {
+  padding: 4px;
+  font-size: 1.1em;
+  line-height: 1;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  filter: grayscale(0.7);
+  opacity: 0.75;
+  transition:
+    filter var(--speed-fast, 0.15s),
+    opacity var(--speed-fast, 0.15s);
+}
+
+.cmt-emoji-tab:hover {
+  filter: none;
+  opacity: 1;
+}
+
+.cmt-emoji-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--space-sm, 8px) var(--space-sm, 8px);
+}
+
+.cmt-emoji-group {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+
+.cmt-emoji-heading {
+  position: sticky;
+  top: 0;
+  margin: 0;
+  padding: var(--space-sm, 8px) 2px var(--space-xs, 4px);
+  font-family: var(--font-display, inherit);
+  font-weight: 400;
+  font-size: 0.85em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint, var(--text-muted, #888));
+  background: var(--bg-card, Canvas);
+}
+
+.cmt-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+}
+
+.cmt-emoji {
+  aspect-ratio: 1;
+  padding: 0;
+  font-size: 1.4em;
+  line-height: 1;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.cmt-emoji:hover {
+  background: var(--bg-hover, rgba(127, 127, 127, 0.15));
+  transform: scale(1.15);
+}
+
+.cmt-emoji-note {
+  margin: var(--space-lg, 16px) 0;
+  text-align: center;
+}
+
+/* ---------------- Reactions under a comment ---------------- */
+
+.cmt-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs, 4px);
+  margin-top: var(--space-sm, 8px);
+}
+
+.cmt-reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 0.85em;
+  line-height: 1;
+  color: var(--text-muted, #888);
+  background: var(--bg-control, transparent);
+  border: 1px solid var(--border-faint, var(--border, #ccc));
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background var(--speed-fast, 0.15s),
+    border-color var(--speed-fast, 0.15s);
+}
+
+span.cmt-reaction {
+  cursor: default;
+}
+
+.cmt-reaction:hover {
+  background: var(--bg-hover, rgba(127, 127, 127, 0.15));
+}
+
+.cmt-reaction[aria-pressed="true"] {
+  color: var(--text, inherit);
+  background: var(--accent-soft, rgba(200, 0, 0, 0.12));
+  border-color: var(--accent, currentColor);
+}
+
+.cmt-reaction-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.cmt-reaction--add svg {
+  width: 15px;
+  height: 15px;
+}
+
+.cmt-reaction--add {
+  opacity: 0.7;
+}
+
+.cmt-reaction--add:hover,
+.cmt-reaction--add[aria-expanded="true"] {
+  opacity: 1;
+}

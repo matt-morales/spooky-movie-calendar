@@ -117,6 +117,7 @@ export default function MovieDetail({ movie, origin, reviews, onAddReview, onClo
                   hasOlder={reviews.hasOlder}
                   maxDepth={1}
                   onDelete={reviews.remove}
+                  onReact={reviews.react}
                   onLoadOlder={reviews.loadOlder}
                   noun="reviews"
                   emptyText="No reviews yet. Be the first to add one."

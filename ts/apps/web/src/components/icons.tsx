@@ -50,3 +50,11 @@ export function DropIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function ChatIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" {...line}>
+      <path d="M20 12a7.5 7.5 0 0 1-11 6.6L4 20l1.4-4.6A7.5 7.5 0 1 1 20 12Z" />
+    </svg>
+  );
+}

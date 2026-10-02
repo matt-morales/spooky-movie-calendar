@@ -1,9 +1,11 @@
-import type { Comment, PostInput, ThreadPage } from "./types";
+import type { Comment, PostInput, Reaction, ThreadPage } from "./types";
 
 export interface CommentClient {
   thread(threadKey: string, before?: number): Promise<ThreadPage>;
   post(threadKey: string, input: PostInput): Promise<Comment>;
   remove(id: number): Promise<void>;
+  /** Adds (on) or takes back your reaction; returns the comment's reactions. */
+  react(id: number, emoji: string, on: boolean): Promise<Reaction[]>;
 }
 
 export class CommentApiError extends Error {
@@ -46,5 +48,11 @@ export function createCommentClient({ baseUrl = "/api", fetch: doFetch = fetch }
     thread: (key, before = 0) => request(`${threadPath(key)}?before=${before}`),
     post: (key, input) => request(threadPath(key), { method: "POST", body: JSON.stringify(input) }),
     remove: (id) => request(`/comments/${id}`, { method: "DELETE" }),
+    react: async (id, emoji, on) =>
+      (
+        await request<{ reactions: Reaction[] }>(`/comments/${id}/reactions/${encodeURIComponent(emoji)}`, {
+          method: on ? "PUT" : "DELETE",
+        })
+      ).reactions,
   };
 }

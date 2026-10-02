@@ -3,7 +3,7 @@ import { calendarDate, letterboxdLink, nightLabel, outOfFive } from "../lib/form
 import { useAppState, useDispatch, useServices } from "../state/AppState";
 import { watchedToggled } from "../state/events";
 import { isWatched, selectRating } from "../state/reducer";
-import { CheckIcon, DropIcon, EyeIcon, PencilIcon } from "./icons";
+import { ChatIcon, CheckIcon, DropIcon, EyeIcon, PencilIcon } from "./icons";
 import RatingDrops, { useRatingStatus } from "./RatingDrops";
 import "./MovieTile.css";
 
@@ -80,6 +80,8 @@ export default function MovieTile({ movie, headingId, onOpen, onAddReview }: Pro
               )}
             </span>
 
+            {movie.reviewCount > 0 && <ReviewCount count={movie.reviewCount} onOpen={onOpen} />}
+
             {/* Rate right here; the review form is only needed to write a review. */}
             <span className="tile-mine">
               <span className="tile-mine-label">Your rating</span>
@@ -112,5 +114,23 @@ export default function MovieTile({ movie, headingId, onOpen, onAddReview }: Pro
         <img src={movie.posterUrl} alt="" loading="lazy" />
       </div>
     </div>
+  );
+}
+
+/** "3 reviews"; on the card it opens them, like clicking the card does. */
+function ReviewCount({ count, onOpen }: { count: number; onOpen?(): void }) {
+  const label = `${count} ${count === 1 ? "review" : "reviews"}`;
+  const content = (
+    <>
+      <ChatIcon />
+      {label}
+    </>
+  );
+  return onOpen ? (
+    <button type="button" className="tile-reviews" aria-haspopup="dialog" onClick={onOpen}>
+      {content}
+    </button>
+  ) : (
+    <span className="tile-reviews">{content}</span>
   );
 }

@@ -1,5 +1,5 @@
 import { useCommentThread } from "@spooky/comment";
-import { useId, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useId, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { Movie } from "../lib/api";
 import { useServices } from "../state/AppState";
 import MovieDetail from "./MovieDetail";
@@ -16,8 +16,25 @@ export default function MovieCard({ movie }: { movie: Movie }) {
 
   // Reviews are a flat comment thread, loaded once a visitor opens them so the
   // page doesn't fetch 31 threads up front. A review posted from the modal is
-  // added straight away either way.
-  const reviews = useCommentThread(`movie:${movie.id}`, { client: comments, enabled: origin !== null });
+  // added straight away either way, and the card's count follows along.
+  const [reviewCount, setReviewCount] = useState(movie.reviewCount);
+  const counted = useCallback(() => setReviewCount((n) => n + 1), []);
+  const thread = useCommentThread(`movie:${movie.id}`, {
+    client: comments,
+    enabled: origin !== null,
+    onPosted: counted,
+  });
+  const reviews = useMemo(
+    () => ({
+      ...thread,
+      remove: async (id: number) => {
+        await thread.remove(id);
+        setReviewCount((n) => Math.max(0, n - 1));
+      },
+    }),
+    [thread],
+  );
+  const shown = useMemo(() => ({ ...movie, reviewCount }), [movie, reviewCount]);
 
   const openReviews = () => {
     if (origin || !cardRef.current) return;
@@ -46,12 +63,12 @@ export default function MovieCard({ movie }: { movie: Movie }) {
         aria-labelledby={headingId}
         onClick={handleCardClick}
       >
-        <MovieTile movie={movie} headingId={headingId} onOpen={openReviews} onAddReview={() => setReviewing(true)} />
+        <MovieTile movie={shown} headingId={headingId} onOpen={openReviews} onAddReview={() => setReviewing(true)} />
       </article>
 
       {origin && (
         <MovieDetail
-          movie={movie}
+          movie={shown}
           origin={origin}
           reviews={reviews}
           onAddReview={() => setReviewing(true)}

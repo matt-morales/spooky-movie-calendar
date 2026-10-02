@@ -130,3 +130,16 @@ func ids(nodes []*Node) []ID {
 	}
 	return out
 }
+
+func TestValidateEmoji(t *testing.T) {
+	for _, e := range []string{"😱", "💀", "☠️", "❤️", "👍🏽", "👨‍👩‍👧", "🇳🇿", "1️⃣", "🏳️‍🌈"} {
+		if err := ValidateEmoji(e); err != nil {
+			t.Errorf("ValidateEmoji(%q) = %v, want ok", e, err)
+		}
+	}
+	for _, e := range []string{"", "a", "lol", "😱😱", " 😱", "😱 ", "<b>", "1", ":skull:", strings.Repeat("😱", 20)} {
+		if err := ValidateEmoji(e); !errors.Is(err, ErrInvalidEmoji) {
+			t.Errorf("ValidateEmoji(%q) = %v, want ErrInvalidEmoji", e, err)
+		}
+	}
+}

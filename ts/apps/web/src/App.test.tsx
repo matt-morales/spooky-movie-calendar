@@ -17,6 +17,7 @@ const movie = (day: number, title: string, over: Partial<Movie> = {}): Movie => 
   description: `${title} description`,
   posterUrl: `https://images.test/${day}.jpg`,
   rating: { average: 0, count: 0, mine: null },
+  reviewCount: 0,
   ...over,
 });
 
@@ -29,7 +30,7 @@ function setup(api: Partial<Api> = {}) {
         return {
           movies: [
             movie(1, "Christine", { directors: ["John Carpenter"], rating: { average: 7, count: 2, mine: null } }),
-            movie(2, "The Grudge"),
+            movie(2, "The Grudge", { reviewCount: 3 }),
           ],
           letterboxdListUrl: "https://letterboxd.com/someone/list/2025/",
         };
@@ -54,8 +55,10 @@ function setup(api: Partial<Api> = {}) {
         mine: true,
         createdAt: "2025-10-01T21:00:00Z",
         replies: [],
+        reactions: [],
       })),
       remove: vi.fn(async () => undefined),
+      react: vi.fn(async () => []),
     } satisfies CommentClient,
   };
   render(
@@ -232,6 +235,30 @@ describe("App", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("shows how many reviews a movie has, and opens them", async () => {
+    const user = userEvent.setup();
+    setup();
+    const grudge = await cardFor("The Grudge");
+    expect(within(await cardFor("Christine")).queryByText(/^\d+ reviews?$/)).not.toBeInTheDocument(); // none yet: nothing shown
+
+    await user.click(within(grudge).getByRole("button", { name: "3 reviews" }));
+
+    expect(await screen.findByRole("dialog", { name: "The Grudge" })).toBeInTheDocument();
+  });
+
+  it("counts a review as soon as it's posted", async () => {
+    const user = userEvent.setup();
+    setup();
+    const card = await cardFor("Christine");
+
+    await user.click(within(card).getByRole("button", { name: "Add your review" }));
+    const modal = screen.getByRole("dialog", { name: "Review Christine" });
+    await user.type(within(modal).getByLabelText("Your review"), "So good");
+    await user.click(within(modal).getByRole("button", { name: "Post review" }));
+
+    expect(await within(card).findByRole("button", { name: "1 review" })).toBeInTheDocument();
+  });
+
   it("turns a card over to show its reviews when clicked", async () => {
     const user = userEvent.setup();
     const { comments } = setup();
@@ -247,6 +274,7 @@ describe("App", () => {
           mine: false,
           createdAt: "2025-10-01T21:00:00Z",
           replies: [],
+          reactions: [],
         },
       ],
       nextBefore: 0,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 )
 
@@ -20,6 +21,16 @@ type Store interface {
 	CountByAuthorSince(ctx context.Context, authorID string, since time.Time) (int, error)
 	// SetStatus returns ErrNotFound when the comment doesn't exist.
 	SetStatus(ctx context.Context, id ID, status Status) error
+
+	// AddReaction stores a reaction; adding the same one again is a no-op.
+	AddReaction(ctx context.Context, r ReactionRow) error
+	// RemoveReaction deletes a reaction; removing a missing one is a no-op.
+	RemoveReaction(ctx context.Context, id ID, authorID, emoji string) error
+	// ListReactions returns the reactions to these comments, oldest first.
+	ListReactions(ctx context.Context, ids []ID) ([]ReactionRow, error)
+	// CountVisible returns how many visible comments each thread has.
+	// Threads with none may be missing from the map.
+	CountVisible(ctx context.Context, threadKeys []string) (map[string]int, error)
 }
 
 // Verifier is the driven port that checks a poster is human (e.g. Turnstile).
@@ -191,7 +202,95 @@ func (s *Service) Thread(ctx context.Context, threadKey string, before ID) (Page
 		page.NextBefore = 0
 	}
 	page.Comments = BuildTree(flat)
+
+	var ids []ID
+	for _, c := range flat {
+		if c.Status == StatusVisible {
+			ids = append(ids, c.ID)
+		}
+	}
+	if len(ids) > 0 {
+		rows, err := s.store.ListReactions(ctx, ids)
+		if err != nil {
+			return Page{}, fmt.Errorf("list reactions: %w", err)
+		}
+		byComment := map[ID][]ReactionRow{}
+		for _, r := range rows {
+			byComment[r.CommentID] = append(byComment[r.CommentID], r)
+		}
+		attachReactions(page.Comments, byComment)
+	}
 	return page, nil
+}
+
+func attachReactions(nodes []*Node, byComment map[ID][]ReactionRow) {
+	for _, n := range nodes {
+		if n.Status == StatusVisible {
+			n.Reactions = Reactions(byComment[n.ID])
+		}
+		attachReactions(n.Replies, byComment)
+	}
+}
+
+// React adds (on) or removes authorID's emoji reaction on a visible comment
+// and returns the comment's reactions afterwards.
+func (s *Service) React(ctx context.Context, id ID, authorID, emoji string, on bool) ([]Reaction, error) {
+	if authorID == "" {
+		return nil, errors.New("comment: author id is required")
+	}
+	if err := ValidateEmoji(emoji); err != nil {
+		return nil, err
+	}
+	c, err := s.store.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if c.Status != StatusVisible {
+		return nil, ErrNotFound
+	}
+
+	if on {
+		rows, err := s.store.ListReactions(ctx, []ID{id})
+		if err != nil {
+			return nil, fmt.Errorf("list reactions: %w", err)
+		}
+		kinds := Reactions(rows)
+		isNew := !slices.ContainsFunc(kinds, func(r Reaction) bool { return r.Emoji == emoji })
+		if isNew && len(kinds) >= MaxReactionKinds {
+			return nil, ErrTooManyReactions
+		}
+		err = s.store.AddReaction(ctx, ReactionRow{CommentID: id, AuthorID: authorID, Emoji: emoji, CreatedAt: s.now()})
+		if err != nil {
+			return nil, fmt.Errorf("add reaction: %w", err)
+		}
+	} else if err := s.store.RemoveReaction(ctx, id, authorID, emoji); err != nil {
+		return nil, fmt.Errorf("remove reaction: %w", err)
+	}
+
+	rows, err := s.store.ListReactions(ctx, []ID{id})
+	if err != nil {
+		return nil, fmt.Errorf("list reactions: %w", err)
+	}
+	return Reactions(rows), nil
+}
+
+// Counts returns how many visible comments each thread has, e.g. to show
+// "3 reviews" without loading the threads. Every key is in the result.
+func (s *Service) Counts(ctx context.Context, threadKeys []string) (map[string]int, error) {
+	for _, k := range threadKeys {
+		if err := ValidateThreadKey(k); err != nil {
+			return nil, err
+		}
+	}
+	counts, err := s.store.CountVisible(ctx, threadKeys)
+	if err != nil {
+		return nil, fmt.Errorf("count comments: %w", err)
+	}
+	out := make(map[string]int, len(threadKeys))
+	for _, k := range threadKeys {
+		out[k] = counts[k]
+	}
+	return out, nil
 }
 
 // Moderate sets a comment's status (e.g. hide spam). For moderators only.

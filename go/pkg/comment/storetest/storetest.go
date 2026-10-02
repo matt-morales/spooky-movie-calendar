@@ -5,6 +5,7 @@ package storetest
 import (
 	"context"
 	"errors"
+	"slices"
 	"testing"
 	"time"
 
@@ -17,6 +18,8 @@ func Run(t *testing.T, newStore func(t *testing.T) comment.Store) {
 	t.Run("ListThreadPagesRootsWithDescendants", func(t *testing.T) { listThread(t, newStore(t)) })
 	t.Run("CountByAuthorSince", func(t *testing.T) { countByAuthor(t, newStore(t)) })
 	t.Run("SetStatus", func(t *testing.T) { setStatus(t, newStore(t)) })
+	t.Run("Reactions", func(t *testing.T) { reactions(t, newStore(t)) })
+	t.Run("CountVisible", func(t *testing.T) { countVisible(t, newStore(t)) })
 }
 
 var base = time.Date(2025, 10, 1, 20, 0, 0, 0, time.UTC)
@@ -126,6 +129,66 @@ func setStatus(t *testing.T, s comment.Store) {
 	}
 	if err := s.SetStatus(ctx, 999999, comment.StatusHidden); !errors.Is(err, comment.ErrNotFound) {
 		t.Errorf("missing: got %v, want ErrNotFound", err)
+	}
+}
+
+func reactions(t *testing.T, s comment.Store) {
+	ctx := context.Background()
+	a := insert(t, s, comment.Comment{})
+	b := insert(t, s, comment.Comment{})
+	add := func(id comment.ID, author, emoji string, at time.Time) {
+		t.Helper()
+		if err := s.AddReaction(ctx, comment.ReactionRow{CommentID: id, AuthorID: author, Emoji: emoji, CreatedAt: at}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	add(a.ID, "v1", "😱", base)
+	add(a.ID, "v2", "😱", base.Add(time.Minute))
+	add(a.ID, "v1", "💀", base.Add(2*time.Minute))
+	add(a.ID, "v1", "😱", base.Add(3*time.Minute)) // again: no duplicate
+	add(b.ID, "v3", "🎃", base)
+
+	got, err := s.ListReactions(ctx, []comment.ID{a.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var seq []string
+	for _, r := range got {
+		seq = append(seq, r.AuthorID+r.Emoji)
+	}
+	if want := []string{"v1😱", "v2😱", "v1💀"}; !slices.Equal(seq, want) {
+		t.Errorf("ListReactions = %v, want %v (oldest first, no duplicates, only comment a)", seq, want)
+	}
+
+	if err := s.RemoveReaction(ctx, a.ID, "v1", "😱"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.RemoveReaction(ctx, a.ID, "v1", "😱"); err != nil { // already gone: fine
+		t.Fatalf("removing a missing reaction: %v", err)
+	}
+	got, _ = s.ListReactions(ctx, []comment.ID{a.ID, b.ID})
+	if len(got) != 3 {
+		t.Errorf("after remove: %d reactions, want 3: %+v", len(got), got)
+	}
+}
+
+func countVisible(t *testing.T, s comment.Store) {
+	ctx := context.Background()
+	insert(t, s, comment.Comment{ThreadKey: "movie:2025-01"})
+	insert(t, s, comment.Comment{ThreadKey: "movie:2025-01"})
+	hidden := insert(t, s, comment.Comment{ThreadKey: "movie:2025-01"})
+	insert(t, s, comment.Comment{ThreadKey: "movie:2025-02"})
+	insert(t, s, comment.Comment{ThreadKey: "movie:2025-09"}) // not asked for
+	if err := s.SetStatus(ctx, hidden.ID, comment.StatusHidden); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := s.CountVisible(ctx, []string{"movie:2025-01", "movie:2025-02", "movie:2025-03"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got["movie:2025-01"] != 2 || got["movie:2025-02"] != 1 || got["movie:2025-03"] != 0 || len(got) > 3 {
+		t.Errorf("CountVisible = %v", got)
 	}
 }
 

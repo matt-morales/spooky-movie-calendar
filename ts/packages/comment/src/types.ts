@@ -12,6 +12,14 @@ export interface Comment {
   mine: boolean;
   createdAt: string; // ISO 8601
   replies: Comment[];
+  reactions: Reaction[]; // in order of first use
+}
+
+/** One emoji on a comment: how many people used it, and whether you did. */
+export interface Reaction {
+  emoji: string;
+  count: number;
+  mine: boolean;
 }
 
 export interface ThreadPage {

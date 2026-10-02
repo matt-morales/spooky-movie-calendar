@@ -19,3 +19,10 @@ type Comment struct {
 	Status     string
 	CreatedAt  time.Time
 }
+
+type CommentReaction struct {
+	CommentID int64
+	AuthorID  string
+	Emoji     string
+	CreatedAt time.Time
+}

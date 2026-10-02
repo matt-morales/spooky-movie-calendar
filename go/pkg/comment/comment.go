@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -48,7 +49,13 @@ var (
 	ErrTooDeep           = errors.New("reply is nested too deeply")
 	ErrRateLimited       = errors.New("too many comments, try again shortly")
 	ErrNotHuman          = errors.New("human verification failed")
+	ErrInvalidEmoji      = errors.New("a reaction must be a single emoji")
+	ErrTooManyReactions  = errors.New("this comment has as many different reactions as it can take")
 )
+
+// MaxReactionKinds caps how many different emoji one comment can collect;
+// anyone can still join an existing reaction.
+const MaxReactionKinds = 12
 
 type Comment struct {
 	ID         ID
@@ -62,10 +69,93 @@ type Comment struct {
 	CreatedAt  time.Time
 }
 
-// Node is a comment with its replies, as shown to readers.
+// Node is a comment with its replies and reactions, as shown to readers.
 type Node struct {
 	Comment
-	Replies []*Node
+	Replies   []*Node
+	Reactions []Reaction
+}
+
+// ReactionRow is one person's reaction to a comment, as stored.
+type ReactionRow struct {
+	CommentID ID
+	AuthorID  string
+	Emoji     string
+	CreatedAt time.Time
+}
+
+// Reaction is one emoji on a comment: how many people used it, and who.
+type Reaction struct {
+	Emoji   string
+	Count   int
+	authors map[string]bool
+}
+
+// By reports whether authorID is one of the people who reacted.
+func (r Reaction) By(authorID string) bool { return r.authors[authorID] }
+
+// Reactions groups stored rows (oldest first) into one Reaction per emoji, in
+// the order each emoji was first used.
+func Reactions(rows []ReactionRow) []Reaction {
+	var out []Reaction
+	index := map[string]int{}
+	for _, row := range rows {
+		i, ok := index[row.Emoji]
+		if !ok {
+			i = len(out)
+			index[row.Emoji] = i
+			out = append(out, Reaction{Emoji: row.Emoji, authors: map[string]bool{}})
+		}
+		if !out[i].authors[row.AuthorID] {
+			out[i].authors[row.AuthorID] = true
+			out[i].Count++
+		}
+	}
+	return out
+}
+
+// ValidateEmoji accepts exactly one emoji, including composed ones: skin
+// tones, ZWJ sequences (👨‍👩‍👧), flags and keycaps. It counts emoji "bases";
+// modifiers and ZWJ-joined parts attach to the base before them.
+func ValidateEmoji(e string) error {
+	if e == "" || len(e) > 64 || !utf8.ValidString(e) {
+		return ErrInvalidEmoji
+	}
+	bases, pictographic, afterZWJ, regional := 0, false, false, 0
+	for _, r := range e {
+		switch {
+		case r == 0x200D: // zero-width joiner
+			afterZWJ = true
+			continue
+		case r == 0xFE0F || r == 0xFE0E || // variation selectors
+			(r >= 0x1F3FB && r <= 0x1F3FF) || // skin tones
+			(r >= 0xE0020 && r <= 0xE007F): // tag sequences (subdivision flags)
+		case r == 0x20E3: // keycap: 1️⃣
+			pictographic = true
+		case r >= 0x1F1E6 && r <= 0x1F1FF: // regional indicators: two make a flag
+			if regional%2 == 0 && !afterZWJ {
+				bases++
+			}
+			regional++
+			pictographic = true
+		case unicode.In(r, unicode.So, unicode.Sm) || r == 0x203C || r == 0x2049 || r == 0x3030 || r == 0x303D:
+			if !afterZWJ {
+				bases++
+			}
+			pictographic = true
+		case r >= '0' && r <= '9' || r == '#' || r == '*': // keycap bases
+			if !afterZWJ {
+				bases++
+			}
+		default: // letters, spaces, punctuation, controls
+			return ErrInvalidEmoji
+		}
+		afterZWJ = false
+	}
+	if bases != 1 || !pictographic {
+		return ErrInvalidEmoji
+	}
+	return nil
 }
 
 var threadKeyRE = regexp.MustCompile(`^[a-z0-9][a-z0-9:._-]{0,127}$`)
