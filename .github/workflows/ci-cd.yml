@@ -68,6 +68,17 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
     steps:
+      # Without these, Terraform's Cloudflare and Neon providers fail with a
+      # bare "exit code 2"; say which secret is missing instead.
+      - name: Check deploy secrets
+        run: |
+          missing=()
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing+=(CLOUDFLARE_API_TOKEN)
+          [ -n "$NEON_API_KEY" ] || missing+=(NEON_API_KEY)
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error title=Missing deploy secrets::Add ${missing[*]} under Settings → Secrets and variables → Actions (repository or the production environment)."
+            exit 1
+          fi
       - uses: actions/checkout@v7
       - name: Load deploy.env
         run: grep -v '^#' deploy.env >> "$GITHUB_ENV"
