@@ -3,6 +3,7 @@ package httpapi_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -135,13 +136,23 @@ func TestListMovies(t *testing.T) {
 
 func TestListMoviesCountsEachMoviesReviews(t *testing.T) {
 	h := newServer(t, &deps{})
+	var first struct {
+		ID int64 `json:"id"`
+	}
 	for range 2 {
 		rec := request(h, "POST", "/api/threads/movie:2025-01/comments", `{"body":"So good","turnstileToken":"ok"}`)
 		if rec.Code != http.StatusCreated {
 			t.Fatalf("post review: %d %s", rec.Code, rec.Body)
 		}
+		json.NewDecoder(rec.Body).Decode(&first)
 	}
-	rec := request(h, "GET", "/api/movies?year=2025", "")
+	// A reply isn't a review: it doesn't change the count.
+	rec := request(h, "POST", "/api/threads/movie:2025-01/comments",
+		fmt.Sprintf(`{"body":"Agreed","parentId":%d,"turnstileToken":"ok"}`, first.ID))
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("post reply: %d %s", rec.Code, rec.Body)
+	}
+	rec = request(h, "GET", "/api/movies?year=2025", "")
 	var body struct {
 		Movies []map[string]any `json:"movies"`
 	}

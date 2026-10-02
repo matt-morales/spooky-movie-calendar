@@ -96,8 +96,8 @@ func serve(ctx context.Context, cfg config) error {
 	now := time.Now
 	analytics := app.NewAnalytics(store, now)
 	comments := comment.NewService(commentpg.New(pool), verifier,
-		// Movie reviews are a flat list: no replies.
-		comment.WithConfig(comment.Config{MaxDepth: 1}),
+		// Movie reviews, each with one level of replies.
+		comment.WithConfig(comment.Config{MaxDepth: 2}),
 		comment.WithOnPosted(func(ctx context.Context, c comment.Comment) {
 			analytics.Record(ctx, "comment_posted", domain.VisitorID(c.AuthorID), map[string]any{
 				"threadKey": c.ThreadKey, "commentId": int64(c.ID), "parentId": int64(c.ParentID),

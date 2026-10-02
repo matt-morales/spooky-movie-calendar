@@ -52,6 +52,10 @@ export interface CommentListProps {
   maxDepth?: number;
   onReply?(body: string, authorName: string, parentId: number): Promise<void>;
   onDelete(id: number): Promise<void>;
+  /** The reply form's label, e.g. "Your reply". */
+  replyLabel?: string;
+  /** Show the optional name field when replying, as when posting. */
+  replyShowsName?: boolean;
   /** Toggles your emoji reaction; without it, reactions are shown read-only. */
   onReact?(id: number, emoji: string): Promise<void>;
   onLoadOlder(): Promise<void>;
@@ -66,6 +70,8 @@ export function CommentList({
   hasOlder,
   maxDepth = 5,
   onReply,
+  replyLabel = "Reply",
+  replyShowsName = false,
   onDelete,
   onReact,
   onLoadOlder,
@@ -86,6 +92,7 @@ export function CommentList({
               comment={c}
               now={now}
               maxDepth={onReply ? maxDepth : 0}
+              reply={{ label: replyLabel, showName: replyShowsName }}
               onReply={onReply}
               onDelete={onDelete}
               onReact={onReact}
@@ -107,12 +114,13 @@ interface ItemProps {
   comment: Comment;
   now: number;
   maxDepth: number;
+  reply: { label: string; showName: boolean };
   onReply?(body: string, authorName: string, parentId: number): Promise<void>;
   onDelete(id: number): Promise<void>;
   onReact?(id: number, emoji: string): Promise<void>;
 }
 
-function CommentItem({ comment: c, now, maxDepth, onReply, onDelete, onReact }: ItemProps) {
+function CommentItem({ comment: c, now, maxDepth, reply, onReply, onDelete, onReact }: ItemProps) {
   const [replying, setReplying] = useState(false);
   const removed = c.status === "removed";
   const author = removed ? "" : c.authorName || "Anonymous";
@@ -131,20 +139,30 @@ function CommentItem({ comment: c, now, maxDepth, onReply, onDelete, onReact }: 
             </time>
           </header>
           <p className="cmt-body">{c.body}</p>
-          <Reactions
-            reactions={c.reactions}
-            onReact={onReact && ((emoji) => onReact(c.id, emoji).catch(() => {}))}
-          />
-          <div className="cmt-actions">
-            {canReply && (
-              <button type="button" className="cmt-link" onClick={() => setReplying((r) => !r)}>
-                Reply
-              </button>
-            )}
-            {c.mine && (
-              <button type="button" className="cmt-link" onClick={() => onDelete(c.id)}>
-                Delete
-              </button>
+          {/* Reactions on the left, Reply and Delete on the right. */}
+          <div className="cmt-footer">
+            <Reactions
+              reactions={c.reactions}
+              onReact={onReact && ((emoji) => onReact(c.id, emoji).catch(() => {}))}
+            />
+            {(canReply || c.mine) && (
+              <div className="cmt-actions cmt-item-actions">
+                {canReply && (
+                  <button
+                    type="button"
+                    className="cmt-link"
+                    aria-expanded={replying}
+                    onClick={() => setReplying((r) => !r)}
+                  >
+                    Reply
+                  </button>
+                )}
+                {c.mine && (
+                  <button type="button" className="cmt-link" onClick={() => onDelete(c.id)}>
+                    Delete
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </>
@@ -152,9 +170,10 @@ function CommentItem({ comment: c, now, maxDepth, onReply, onDelete, onReact }: 
 
       {replying && onReply && (
         <CommentForm
-          label="Reply"
+          label={reply.label}
           submitLabel="Post reply"
-          showName={false}
+          showName={reply.showName}
+          autoFocus
           onCancel={() => setReplying(false)}
           onSubmit={async (body, name) => {
             await onReply(body, name, c.id);
@@ -171,6 +190,7 @@ function CommentItem({ comment: c, now, maxDepth, onReply, onDelete, onReact }: 
                 comment={r}
                 now={now}
                 maxDepth={maxDepth}
+                reply={reply}
                 onReply={onReply}
                 onDelete={onDelete}
                 onReact={onReact}

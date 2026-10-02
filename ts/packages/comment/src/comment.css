@@ -347,13 +347,29 @@
   text-align: center;
 }
 
-/* ---------------- Reactions under a comment ---------------- */
+/* ---------------- Under a comment: reactions, Reply, Delete ---------------- */
+
+.cmt-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm, 8px);
+  margin-top: var(--space-sm, 8px);
+}
+
+.cmt-footer:empty {
+  display: none;
+}
+
+.cmt-item-actions {
+  margin-left: auto;
+}
 
 .cmt-reactions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xs, 4px);
-  margin-top: var(--space-sm, 8px);
 }
 
 .cmt-reaction {

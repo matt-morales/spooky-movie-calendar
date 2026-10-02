@@ -9,6 +9,7 @@ import { AppStateProvider } from "./state/AppState";
 import "./styles/fonts.css";
 import "./styles/tokens.css";
 import "./styles/global.css";
+import "./styles/comments.css";
 
 // Which lineup to show: the year in the path ("/2025"), else the build-time
 // default. The address bar is rewritten to the canonical "/<year>" URL before
